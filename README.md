@@ -76,7 +76,7 @@ func NewHelloPage() *iu.Page {
 ### III. Load it in the app
 ```go
 func main() {
-	var ctx = iu.EmptyContext{} // to be repaclaced by a Mac OSX window for eg.
+	var ctx = iu.EmptyContext{} // to be replaced by a Mac OSX window for eg.
 	var view = NewHelloPage()
 
 	ctx.Navigate(view)
