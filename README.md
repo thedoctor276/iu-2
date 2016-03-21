@@ -12,7 +12,8 @@ go get -u github.com/maxence-charriere/iu
 
 ## Getting started
 The UI layer is built by encapsulation of go structs, each equivalent to an HTML tag.
-### I. build a hello component
+
+### I. Build a hello component
 ```go
 type HelloComponent struct {
 	iu.Div // embedding a div as a base
@@ -57,6 +58,7 @@ func NewHelloComponent() *HelloComponent {
 	return hello
 }
 ```
+
 ### II. Build a page
 ```go
 func NewHelloPage() *iu.Page {
@@ -73,6 +75,7 @@ func NewHelloPage() *iu.Page {
 	}
 }
 ```
+
 ### III. Load it in the app
 ```go
 func main() {
