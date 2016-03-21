@@ -121,7 +121,8 @@ var (
      step="{{.Step}}"{{end}}{{if .Min}}
      min="{{.Min}}"{{end}}{{if .Max}}
      max="{{.Max}}"{{end}}{{if .Value}}
-     value="{{.Value}}"{{end}}
+     value="{{.Value}}"{{end}}{{if .Placeholder}}
+     placeholder="{{.Placeholder}}"{{end}}
      type="{{.Type}}"{{if .OnClick}}
      onclick="{{.OnEvent "OnClick" "event"}}"{{end}}{{if .OnContextMenu}}
      oncontextmenu="{{.OnEvent "OnContextMenu" "event"}}"{{end}}{{if .OnDblClick}}
@@ -150,9 +151,9 @@ var (
      onpaste="{{.OnEvent "OnPaste" "event"}}"{{end}}{{if .OnBlur}}
      onblur="{{.OnEvent "OnBlur" "event"}}"{{end}}{{if .OnFocus}}
      onfocus="{{.OnEvent "OnFocus" "event"}}"{{end}}{{if .OnSelect}}
-     onselect="{{.OnEvent "OnSelect" "event"}}"{{end}}{{if .OnChanged }}
-     onchange="{{.OnEvent "OnChanged" "this.value"}}"{{end}}{{if .OnChecked }}
-     onchange="{{.OnEvent "OnChecked" "this.checked"}}"{{end}}>
+     onselect="{{.OnEvent "OnSelect" "event"}}"{{end}}{{if .OnChange }}
+     onchange="{{.OnEvent "OnChange" "this.value"}}"{{end}}{{if .OnCheck }}
+     onchange="{{.OnEvent "OnCheck" "this.checked"}}"{{end}}>
 `, " \t\r\n")
 )
 

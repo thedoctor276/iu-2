@@ -22,7 +22,7 @@ func (comp *Text) NotifyDataContextChanged() {
 }
 
 func (comp *Text) Init(view View, parent Component) {
-	comp.ComponentBase = NewComponentBase(view, "{{.Value}}")
+	comp.ComponentBase = NewComponentBase(view, `<span id="{{.ID}}">{{.Value}}</span>`)
 	comp.Parent = parent
 	view.RegisterComponent(comp)
 }

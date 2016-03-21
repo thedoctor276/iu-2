@@ -8,6 +8,8 @@ type Context interface {
 	CurrentView() View
 
 	InjectComponent(component Component)
+
+	Navigate(view View)
 }
 
 type EmptyContext struct {
@@ -24,4 +26,9 @@ func (ctx *EmptyContext) CurrentView() View {
 
 func (ctx *EmptyContext) InjectComponent(component Component) {
 	iulog.Printf(`Inject %v{ID: %v} in context`, component.Tag(), component.ID())
+}
+
+func (ctx *EmptyContext) Navigate(view View) {
+	view.Init(ctx)
+	iulog.Printf(`Navigate -> %v`, view.Render())
 }

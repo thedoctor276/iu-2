@@ -20,6 +20,7 @@ type Input struct {
 	Min             string
 	Step            string
 	Value           string
+	Placeholder     string
 	Type            InputType
 	Dir             DirAttribute
 	TabIndex        uint
@@ -61,8 +62,8 @@ type Input struct {
 	OnBlur               func()
 	OnFocus              func()
 	OnSelect             func()
-	OnChanged            func(value string)
-	OnChecked            func(checked bool)
+	OnChange             func(value string)
+	OnCheck              func(check bool)
 }
 
 type InputType string
@@ -91,7 +92,7 @@ func (comp *Input) Init(view View, parent Component) {
 		comp.Type = InputText
 	}
 
-	if comp.OnChanged != nil && comp.OnChecked != nil {
+	if comp.OnChange != nil && comp.OnCheck != nil {
 		iulog.Panicf("%v with id = %v: can't set both OnChanged and OnChecked")
 	}
 }

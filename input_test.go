@@ -11,6 +11,7 @@ func inputTest() *Input {
 		Min:                  "0",
 		Step:                 "1",
 		Value:                "input test",
+		Placeholder:          "this is an input",
 		Dir:                  DirLtr,
 		TabIndex:             1,
 		ContentEditable:      true,
@@ -49,7 +50,7 @@ func inputTest() *Input {
 		OnBlur:               func() {},
 		OnFocus:              func() {},
 		OnSelect:             func() {},
-		OnChanged:            func(value string) {},
+		OnChange:             func(value string) {},
 	}
 }
 
@@ -63,8 +64,8 @@ func TestInputInit(t *testing.T) {
 
 func TestInputInitConflictingOnChange(t *testing.T) {
 	var inputOnChangeConflict = &Input{
-		OnChanged: func(value string) {},
-		OnChecked: func(checked bool) {},
+		OnChange: func(value string) {},
+		OnCheck:  func(checked bool) {},
 	}
 	defer func() { recover() }()
 
@@ -82,8 +83,8 @@ func TestInputRender(t *testing.T) {
 
 func TestInputRenderCheckable(t *testing.T) {
 	var inputCheckableTest = &Input{
-		Type:      InputCheckbox,
-		OnChecked: func(checked bool) {},
+		Type:    InputCheckbox,
+		OnCheck: func(checked bool) {},
 	}
 
 	testComponentRender(t, inputCheckableTest)
