@@ -22,6 +22,7 @@ const (
     `
 )
 ```
+
 ### II. Create a component
 ```go
 type HelloComponent struct {
@@ -44,12 +45,25 @@ func (hello *HelloComponent) Sync() {
 	hello.Render()
 }
 
+```
+
+### II. Build a page
+```go
+func NewHelloPage() *iu.Page {
+	return &iu.Page{
+		Title: "Hello",
+		Lang:  "en",
+		CSS: []string{
+			"hello.css",
+		},
+
 func NewHelloComponent() *HelloComponent {
 	return &HelloComponent{
 		Composer: iu.NewComposer(HelloTpl),
 	}
 }
 ```
+
 ### III. Load it in the app
 ```go
 func main() {
