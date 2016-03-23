@@ -25,7 +25,7 @@ func (ctx *EmptyContext) CurrentView() View {
 }
 
 func (ctx *EmptyContext) InjectComponent(component Component) {
-	iulog.Printf(`Inject %v{ID: %v} in context`, component.Tag(), component.ID())
+	iulog.Printf(`Inject {ID: %v} in context`, component.ID())
 }
 
 func (ctx *EmptyContext) Navigate(view View) {

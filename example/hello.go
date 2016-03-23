@@ -2,68 +2,48 @@ package main
 
 import "github.com/maxence-charriere/iu"
 
-type HelloComponent struct {
-	iu.Div // embedding a div as a base
+const (
+	HelloTpl = `
+<div id={{.ID}}>
+    <h1>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>
+    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnInputChanged" "event"}}">
+</div>
+    `
+)
 
-	Greeting *iu.Text  // to keep an easy access on the greeting
-	Input    *iu.Input // to keep an easy access on the input
+type HelloComponent struct {
+	Greeting string
+	Input    string
+	*iu.Composer
 }
 
-func (comp *HelloComponent) OnInputChange(v string) {
-	comp.Input.Value = v
+func (hello *HelloComponent) OnInputChanged(value string) {
+	hello.Greeting = value
+	hello.Sync()
+}
 
-	comp.Greeting.Value = v
-	comp.Greeting.Sync() // instruct the app to redraw only the Text component
+func (hello *HelloComponent) Render() string {
+	return hello.Composer.Render(hello)
+}
+
+func (hello *HelloComponent) Sync() {
+	hello.Dirty()
+	hello.Render()
 }
 
 func NewHelloComponent() *HelloComponent {
-	// create the component
-	var hello = &HelloComponent{
-		Greeting: &iu.Text{Value: "World"},
-		Input:    &iu.Input{},
-	}
-
-	// plug the event handler
-	hello.Input.OnChange = hello.OnInputChange
-
-	// design the Component
-	hello.Div = iu.Div{
-		Class: "hello",
-		Content: []iu.Component{
-
-			// the title
-			&iu.H{
-				Content: []iu.Component{
-					&iu.Text{Value: "Hello,"},
-					hello.Greeting,
-				},
-			},
-
-			// the input
-			hello.Input,
-		},
-	}
-
-	return hello
-}
-
-func NewHelloPage() *iu.Page {
-	return &iu.Page{
-		Title: "Hello",
-		Lang:  "en",
-		CSS: []string{
-			"hello.css",
-		},
-
-		Body: []iu.Component{
-			NewHelloComponent(), // the hello component
-		},
+	return &HelloComponent{
+		Composer: iu.NewComposer(HelloTpl),
 	}
 }
 
 func main() {
-	var ctx = iu.EmptyContext{} // to be repaclaced by a Mac OSX window fo eg.
-	var view = NewHelloPage()
+	ctx := &iu.EmptyContext{}
 
-	ctx.Navigate(view)
+	hello := iu.NewPage(NewHelloComponent(), iu.PageConfig{
+		Title: "Hello page",
+		CSS:   []string{"hello.css"},
+	})
+
+	ctx.Navigate(hello)
 }

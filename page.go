@@ -2,22 +2,56 @@ package iu
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
 	"github.com/maxence-charriere/iu-log"
 )
 
-type Page struct {
-	Title    string
-	Lang     string
-	CSS      []string
-	Body     []Component
-	OnLoaded func()
+var (
+	pageTpl = strings.Trim(`
+<!doctype html>
+<html lang="{{.Config.Lang}}">
+<head>
+    <title>{{if .Config.Title}}{{.Config.Title}}{{else}}iu{{end}}</title>
+    <meta charset="utf-8" /> 
+{{range .Config.CSS}}
+    <link rel="stylesheet" href="{{.}}" />{{end}}
+</head>
+<body>
+{{.MainComponent.Render}}
 
-	context    Context
-	loaded     bool
-	template   *template.Template
-	components map[string]Component
+<script>
+{{.FrameworkJS}}
+</script>
+{{range .Config.JS}}
+<script src="{{.}}"></script>{{end}}
+</body>
+</html>
+`, " \t\r\n")
+)
+
+type PageConfig struct {
+	Title string
+	Lang  string
+	CSS   []string
+	JS    []string
+}
+
+type Page struct {
+	config        PageConfig
+	mainComponent Component
+	context       Context
+	template      *template.Template
+	components    map[string]Component
+}
+
+func (page *Page) Config() PageConfig {
+	return page.config
+}
+
+func (page *Page) MainComponent() Component {
+	return page.mainComponent
 }
 
 func (page *Page) Context() Context {
@@ -32,7 +66,7 @@ func (page *Page) Component(id string) (component Component) {
 	var ok bool
 
 	if component, ok = page.components[id]; !ok {
-		iulog.Panicf("component with id = %v is not found in page %v", id, page.Title)
+		iulog.Panicf("component with id = %v is not found in page %v", id, page.config.Title)
 	}
 
 	return
@@ -42,7 +76,7 @@ func (page *Page) RegisterComponent(component Component) {
 	var id string
 
 	if id = component.ID(); len(id) == 0 {
-		iulog.Panicf("can't register component: %v is not initialized", component.Tag())
+		iulog.Panicf("can't register component: %p is not initialized", component)
 	}
 
 	page.components[id] = component
@@ -55,25 +89,17 @@ func (page *Page) UnregisterComponent(component Component) {
 func (page *Page) Init(ctx Context) {
 	var err error
 
-	if len(page.Title) == 0 {
-		iulog.Panic("page.Title should not be empty")
-	}
-
 	if ctx == nil {
 		iulog.Panic("ctx can't be nil")
 	}
 
-	if page.template, err = template.New("").Parse(PageTemplate()); err != nil {
+	if page.template, err = template.New("").Parse(pageTpl); err != nil {
 		iulog.Panic(err)
 	}
 
 	page.context = ctx
-	page.components = make(map[string]Component)
+	PairViewComponent(page, page.MainComponent())
 
-	for _, component := range page.Body {
-		component.Init(page, nil)
-		page.RegisterComponent(component)
-	}
 }
 
 func (page *Page) Render() string {
@@ -85,4 +111,12 @@ func (page *Page) Render() string {
 	}
 
 	return buffer.String()
+}
+
+func NewPage(mainComponent Component, config PageConfig) *Page {
+	return &Page{
+		config:        config,
+		mainComponent: mainComponent,
+		components:    map[string]Component{},
+	}
 }

@@ -7,6 +7,12 @@ import (
 	"github.com/maxence-charriere/iu-log"
 )
 
+const (
+	DeltaPixel DeltaMode = iota
+	DeltaLine
+	DeltaPage
+)
+
 type eventMessage struct {
 	ID   string
 	Name string
@@ -34,6 +40,8 @@ type WheelEvent struct {
 	DeltaZ    float64
 	DeltaMode DeltaMode
 }
+
+type DeltaMode uint64
 
 type KeyboardEvent struct {
 	CharCode rune
