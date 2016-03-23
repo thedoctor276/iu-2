@@ -1,6 +1,9 @@
 package iu
 
-import "sync"
+import (
+	"reflect"
+	"sync"
+)
 
 var (
 	lastComponentID uint64
@@ -25,4 +28,22 @@ func nextComponentId() uint64 {
 
 	lastComponentID++
 	return lastComponentID
+}
+
+func ForRangeComponents(top Component, action func(comp Component)) {
+	var interType = reflect.TypeOf((*Component)(nil)).Elem()
+
+	action(top)
+
+	v := reflect.ValueOf(comp).Elem()
+
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		t := f.Type()
+
+		if t.Implements(interType) {
+			c := f.Interface().(Component)
+			ForRangeComponents(c, action)
+		}
+	}
 }
