@@ -1,128 +1,79 @@
 package iu
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
-func testComponentSetDataContext(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
-
-	view.Init(ctx)
-	comp.SetDataContext("AnyDataContext")
+// Hello
+type Hello struct {
+	Greeting *Component
+	Input    string
+	Name     string
 }
 
-func testComponentInit(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
-
-	view.Init(ctx)
+func (hello *Hello) Template() string {
+	return `
+<div id={{.ID}}>
+    {{.Name}}
+    {{.Greeting.Render}}
+    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnInputChanged" "event"}}">
+</div>
+    `
 }
 
-func testComponentClose(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
+func NewHello() *Hello {
+	return &Hello{
+		Greeting: NewComponent(&World{}),
+		Name:     "Maxence",
 	}
-
-	view.Init(ctx)
-	view.Body = nil
-	comp.Close()
 }
 
-func testComponentRender(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
+// World
+type World struct {
+	Greeting string
+}
 
-	view.Init(ctx)
+func (world *World) Template() string {
+	return `<h1 id={{.ID}}>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>`
+}
 
-	// render full
+// WrongWorld
+type WrongWorld struct {
+	WrongGreeting string
+}
+
+func (world *WrongWorld) Template() string {
+	return `<h1 id={{.ID}}>Hello, <span onclick="{{.OnEvent}}>{{.Greeting}}</span></h1>`
+}
+
+// Tests
+func TestComponentRender(t *testing.T) {
+	hello := NewHello()
+	comp := NewComponent(hello)
 	t.Log(comp.Render())
-
-	// render cache
-	comp.Render()
 }
 
-func testComponentSync(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
+func TestComponentRenderInvalidTemplate(t *testing.T) {
+	defer func() { recover() }()
 
-	view.Init(ctx)
-	comp.Sync()
+	world := &WrongWorld{}
+	comp := NewComponent(world)
+	t.Log(comp.Render())
+	t.Error("should have panic")
 }
 
-func TestComponentBaseID(t *testing.T) {
-	var view = &Page{}
-	var component *ComponentBase
-	var expected = fmt.Sprintf("iu-%v", 1)
-
+func TestNewComponent(t *testing.T) {
 	lastComponentID = 0
 	defer func() { lastComponentID = 0 }()
 
-	component = NewComponentBase(view, CommonComponentTemplate())
+	hello := &Hello{}
+	comp := NewComponent(hello)
 
-	if id := component.ID(); id != expected {
-		t.Errorf("id should be %v: %v", expected, id)
+	if id := comp.ID(); id != "iu-1" {
+		t.Error("id should be iu-1:", id)
 	}
-}
 
-func TestComponentBaseDataContext(t *testing.T) {
-	var div = divTest()
-
-	testComponentSetDataContext(t, div)
-
-	if dataCtx := div.Content[0].DataContext(); dataCtx != div.DataContext() {
-		t.Errorf("dataCtx should be %v: %v", div.DataContext(), dataCtx)
+	if h := comp.composer; h != hello {
+		t.Errorf("h should be %v: %v", hello, h)
 	}
-}
-
-func TestComponentBaseView(t *testing.T) {
-	var view = &Page{}
-	var component = NewComponentBase(view, CommonComponentTemplate())
-	var expected = "CallEventHandler(this.id, 'OnClick', event)"
-
-	if onevent := component.OnEvent("OnClick", "event"); onevent != expected {
-		t.Errorf("onevent should be %v: %v", expected, onevent)
-	}
-}
-
-func TestComponentBaseOnEvent(t *testing.T) {
-	var view = &Page{}
-	var component = NewComponentBase(view, CommonComponentTemplate())
-
-	if v := component.View(); v != view {
-		t.Errorf("p should be %v: %v", view, v)
-	}
-}
-
-func TestNewComponentBase(t *testing.T) {
-	var view = &Page{}
-
-	NewComponentBase(view, CommonComponentTemplate())
 }
 
 func TestNextComponentId(t *testing.T) {

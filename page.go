@@ -98,7 +98,7 @@ func (page *Page) Init(ctx Context) {
 	}
 
 	page.context = ctx
-	PairViewComponent(page, page.MainComponent())
+	//PairViewComponent(page, page.MainComponent())
 
 }
 
