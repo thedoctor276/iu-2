@@ -1,34 +1,11 @@
 package iu
 
-import "github.com/maxence-charriere/iu-log"
-
 type Context interface {
 	Name() string
 
-	CurrentView() View
+	CurrentPage() *Page
 
-	InjectComponent(component Component)
+	InjectComponent(component *Component)
 
-	Navigate(view View)
-}
-
-type EmptyContext struct {
-	view View
-}
-
-func (ctx *EmptyContext) Name() string {
-	return "EmptyContext"
-}
-
-func (ctx *EmptyContext) CurrentView() View {
-	return ctx.view
-}
-
-func (ctx *EmptyContext) InjectComponent(component Component) {
-	iulog.Printf(`Inject %v{ID: %v} in context`, component.Tag(), component.ID())
-}
-
-func (ctx *EmptyContext) Navigate(view View) {
-	view.Init(ctx)
-	iulog.Printf(`Navigate -> %v`, view.Render())
+	Navigate(page *Page)
 }

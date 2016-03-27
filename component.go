@@ -3,6 +3,7 @@ package iu
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"sync"
 	"text/template"
 
@@ -14,91 +15,58 @@ var (
 	componentMutex  sync.Mutex
 )
 
-type Component interface {
-	ID() string
-
-	Tag() string
-
-	DataContext() interface{}
-
-	SetDataContext(dataCtx interface{})
-
-	NotifyDataContextChanged()
-
-	View() View
-
-	Init(view View, parent Component)
-
-	Close()
-
-	Render() string
-
-	Sync()
+type Component struct {
+	page     *Page
+	view     View
+	id       string
+	template *template.Template
 }
 
-type ComponentBase struct {
-	Parent Component
-	Redraw bool
-
-	id          string
-	html        string
-	parent      Component
-	dataContext interface{}
-	view        View
-	template    *template.Template
+func (comp *Component) ID() string {
+	return comp.id
 }
 
-func (component *ComponentBase) ID() string {
-	return component.id
-}
-
-func (component *ComponentBase) DataContext() (dataCtx interface{}) {
-	if dataCtx = component.dataContext; dataCtx != nil {
-		return
-	}
-
-	if component.Parent != nil {
-		dataCtx = component.Parent.DataContext()
-	}
-
-	return
-}
-
-func (component *ComponentBase) View() View {
-	return component.view
-}
-
-func (component *ComponentBase) OnEvent(eventName string, arg string) (handler string) {
-	return fmt.Sprintf("CallEventHandler(this.id, '%v', %v)", eventName, arg)
-}
-
-func (component *ComponentBase) Render(c Component) string {
+func (comp *Component) Render() string {
 	var buffer bytes.Buffer
 	var err error
 
-	if !component.Redraw {
-		return component.html
+	viewValue := reflect.Indirect(reflect.ValueOf(comp.view))
+	viewType := viewValue.Type()
+	viewInterfaceType := reflect.TypeOf((*View)(nil)).Elem()
+
+	m := viewMap{}
+
+	for i := 0; i < viewType.NumField(); i++ {
+		fieldName := viewType.Field(i).Name
+		fieldType := viewType.Field(i).Type
+
+		if fieldType.Implements(viewInterfaceType) {
+			view := viewValue.Field(i).Interface().(View)
+			m[fieldName] = compoM.Component(view)
+		} else {
+			m[fieldName] = viewValue.Field(i).Interface()
+		}
 	}
 
-	if err = component.template.Execute(&buffer, c); err != nil {
+	m["ID"] = comp.id
+
+	if comp.template == nil {
+		if comp.template, err = template.New("").Parse(comp.view.Template()); err != nil {
+			iulog.Panic(err)
+		}
+	}
+
+	if err = comp.template.Execute(&buffer, m); err != nil {
 		iulog.Panic(err)
 	}
 
-	component.html = buffer.String()
-	component.Redraw = false
-	return component.html
+	return buffer.String()
 }
 
-func NewComponentBase(view View, templateString string) *ComponentBase {
-	var component = &ComponentBase{}
-	var err error
-
-	component.Redraw = true
-	component.id = fmt.Sprintf("iu-%v", nextComponentId())
-	component.view = view
-
-	if component.template, err = template.New("").Parse(templateString); err != nil {
-		iulog.Panic(err)
+func NewComponent(view View) *Component {
+	component := &Component{
+		view: view,
+		id:   fmt.Sprintf("iu-%v", nextComponentId()),
 	}
 
 	return component

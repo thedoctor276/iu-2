@@ -5,124 +5,122 @@ import (
 	"testing"
 )
 
-func testComponentSetDataContext(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
-
-	view.Init(ctx)
-	comp.SetDataContext("AnyDataContext")
+// Hello
+type Hello struct {
+	Greeting *World
+	Input    string
 }
 
-func testComponentInit(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
-
-	view.Init(ctx)
+func (hello Hello) Template() string {
+	return `
+<div id={{.ID}}>
+    {{.Greeting.Render}}
+    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnChange" "event"}}">
+</div>
+    `
 }
 
-func testComponentClose(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
-
-	view.Init(ctx)
-	view.Body = nil
-	comp.Close()
+// World
+type World struct {
+	Greeting  string
+	OnNothing func()
 }
 
-func testComponentRender(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
+func (World *World) OnChange(e KeyboardEvent) {
+	fmt.Println("OnChange", e)
+}
+
+func (World *World) OnClick(e MouseEvent) {
+	fmt.Println("OnClick", e)
+}
+
+func (World *World) OnWheel(e WheelEvent) {
+	fmt.Println("OnWheel", e)
+}
+
+func (World *World) OnChecked(e bool) {
+	fmt.Println("OnChecked", e)
+}
+
+func (World *World) OnString(e string) {
+	fmt.Println("OnString", e)
+}
+
+func (World *World) OnNumber(e float64) {
+	fmt.Println("OnNumber", e)
+}
+
+func (world *World) Template() string {
+	return `<h1 id={{.ID}}>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>`
+}
+
+// WrongWorld
+type WrongWorld struct {
+	WrongGreeting string
+}
+
+func (world WrongWorld) Template() string {
+	return `<h1 id={{.ID}}>Hello, <span onclick="{{.OnEvent}}>{{.Greeting}}</span></h1>`
+}
+
+// HelloLoop
+type HelloLoop struct {
+	Greeting *World
+	Parent   *HelloLoop
+	Input    string
+}
+
+func (hello *HelloLoop) Template() string {
+	return `
+<div id={{.ID}}>
+    {{.Greeting.Render}}
+    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnInputChanged" "event"}}">
+</div>
+    `
+}
+
+// Tests
+func TestComponentRender(t *testing.T) {
+	hello := Hello{
+		Greeting: &World{},
 	}
 
-	view.Init(ctx)
+	RegisterView(hello)
+	RegisterView(hello.Greeting)
+	defer UnregisterView(hello)
+	defer UnregisterView(hello.Greeting)
 
-	// render full
+	comp := compoM.Component(hello)
 	t.Log(comp.Render())
-
-	// render cache
-	comp.Render()
 }
 
-func testComponentSync(t *testing.T, comp Component) {
-	var ctx = &EmptyContext{}
-	var view = &Page{
-		Title: "Test",
-		Body: []Component{
-			comp,
-		},
-	}
+func TestComponentRenderInvalidTemplate(t *testing.T) {
+	defer func() { recover() }()
 
-	view.Init(ctx)
-	comp.Sync()
+	world := WrongWorld{}
+
+	RegisterView(world)
+	defer UnregisterView(world)
+
+	comp := NewComponent(world)
+	t.Log(comp.Render())
+	t.Error("should have panic")
 }
 
-func TestComponentBaseID(t *testing.T) {
-	var view = &Page{}
-	var component *ComponentBase
-	var expected = fmt.Sprintf("iu-%v", 1)
-
+func TestNewComponent(t *testing.T) {
 	lastComponentID = 0
 	defer func() { lastComponentID = 0 }()
 
-	component = NewComponentBase(view, CommonComponentTemplate())
+	hello := Hello{}
+	comp := NewComponent(hello)
 
-	if id := component.ID(); id != expected {
-		t.Errorf("id should be %v: %v", expected, id)
+	if id := comp.ID(); id != "iu-1" {
+		t.Error("id should be iu-1:", id)
 	}
-}
 
-func TestComponentBaseDataContext(t *testing.T) {
-	var div = divTest()
-
-	testComponentSetDataContext(t, div)
-
-	if dataCtx := div.Content[0].DataContext(); dataCtx != div.DataContext() {
-		t.Errorf("dataCtx should be %v: %v", div.DataContext(), dataCtx)
+	if h := comp.view; h != hello {
+		t.Errorf("h should be %v: %v", hello, h)
 	}
-}
-
-func TestComponentBaseView(t *testing.T) {
-	var view = &Page{}
-	var component = NewComponentBase(view, CommonComponentTemplate())
-	var expected = "CallEventHandler(this.id, 'OnClick', event)"
-
-	if onevent := component.OnEvent("OnClick", "event"); onevent != expected {
-		t.Errorf("onevent should be %v: %v", expected, onevent)
-	}
-}
-
-func TestComponentBaseOnEvent(t *testing.T) {
-	var view = &Page{}
-	var component = NewComponentBase(view, CommonComponentTemplate())
-
-	if v := component.View(); v != view {
-		t.Errorf("p should be %v: %v", view, v)
-	}
-}
-
-func TestNewComponentBase(t *testing.T) {
-	var view = &Page{}
-
-	NewComponentBase(view, CommonComponentTemplate())
 }
 
 func TestNextComponentId(t *testing.T) {

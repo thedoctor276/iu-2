@@ -2,9 +2,14 @@ package iu
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
+)
 
-	"github.com/maxence-charriere/iu-log"
+const (
+	DeltaPixel DeltaMode = iota
+	DeltaLine
+	DeltaPage
 )
 
 type eventMessage struct {
@@ -35,6 +40,8 @@ type WheelEvent struct {
 	DeltaMode DeltaMode
 }
 
+type DeltaMode uint64
+
 type KeyboardEvent struct {
 	CharCode rune
 	KeyCode  KeyCode
@@ -45,103 +52,46 @@ type KeyboardEvent struct {
 	ShiftKey bool
 }
 
-func TryCallViewEvent(view View, name string, args ...interface{}) {
-	tryCallEvent(view, name, args...)
-}
+func callViewEvent(view View, name, arg string) (err error) {
+	var mv reflect.Value
 
-func TryCallComponentEvent(component Component, name string, args ...interface{}) {
-	tryCallEvent(component, name, args...)
-}
+	v := reflect.ValueOf(view)
 
-func tryCallEvent(obj interface{}, name string, args ...interface{}) {
-	var objValue = reflect.ValueOf(obj).Elem()
-	var eventValue = objValue.FieldByName(name)
-	var eventType = eventValue.Type()
-	var argLen = len(args)
-	var numIn int
-	var in []reflect.Value
-
-	if eventValue.Kind() != reflect.Func {
-		iulog.Panicf("%v must be a func")
+	if mv = v.MethodByName(name); !mv.IsValid() {
+		v = reflect.Indirect(v)
+		mv = v.FieldByName(name)
 	}
 
-	if eventValue.IsNil() {
+	if !mv.IsValid() {
+		err = fmt.Errorf("%#v doesn't have any method or field named", view, name)
 		return
 	}
 
-	if numIn = eventType.NumIn(); numIn != argLen {
-		iulog.Panicf("args and in have a different len: %v != %v", argLen, numIn)
-	}
-
-	in = make([]reflect.Value, numIn)
-
-	for i := 0; i < numIn; i++ {
-		var inType = eventType.In(i)
-		var argValue = reflect.ValueOf(args[i])
-		var argType = argValue.Type()
-
-		if inType != argType {
-			iulog.Panicf("inType: %v != argType: %v", inType, argType)
-		}
-
-		in[i] = argValue
-	}
-
-	eventValue.Call(in)
-}
-
-func tryCallComponentEventWithArg(component Component, name string, arg string) {
-	var mouseEvent MouseEvent
-	var wheelEvent WheelEvent
-	var keyboardEvent KeyboardEvent
-	var componentValue = reflect.ValueOf(component)
-	var objValue = componentValue.Elem()
-	var eventValue = objValue.FieldByName(name)
-	var eventType reflect.Type
-	var err error
-
-	if !eventValue.IsValid() {
-		eventValue = componentValue.MethodByName(name)
-	}
-
-	if eventValue.Kind() != reflect.Func {
-		iulog.Panicf("%v must be a func")
-	}
-
-	if eventValue.IsNil() {
+	if mv.Kind() != reflect.Func {
+		err = fmt.Errorf("field %v is not a func", name)
 		return
 	}
 
-	eventType = eventValue.Type()
-
-	if numIn := eventType.NumIn(); numIn == 0 {
-		eventValue.Call(nil)
+	if mv.IsNil() {
 		return
 	}
 
-	switch argType := eventType.In(0); argType {
-	case reflect.TypeOf(mouseEvent):
-		if err = json.Unmarshal([]byte(arg), &mouseEvent); err != nil {
-			iulog.Panic(err)
-		}
+	mt := mv.Type()
 
-		eventValue.Call([]reflect.Value{reflect.ValueOf(mouseEvent)})
-
-	case reflect.TypeOf(wheelEvent):
-		if err = json.Unmarshal([]byte(arg), &wheelEvent); err != nil {
-			iulog.Panic(err)
-		}
-
-		eventValue.Call([]reflect.Value{reflect.ValueOf(wheelEvent)})
-
-	case reflect.TypeOf(keyboardEvent):
-		if err = json.Unmarshal([]byte(arg), &keyboardEvent); err != nil {
-			iulog.Panic(err)
-		}
-
-		eventValue.Call([]reflect.Value{reflect.ValueOf(keyboardEvent)})
-
-	default:
-		eventValue.Call([]reflect.Value{reflect.ValueOf(arg)})
+	if mt.NumIn() == 0 {
+		mv.Call(nil)
+		return
 	}
+
+	argt := mt.In(0)
+	argv := reflect.New(argt)
+	argi := argv.Interface()
+	fmt.Println(reflect.TypeOf(argi))
+
+	if err = json.Unmarshal([]byte(arg), argi); err != nil {
+		return
+	}
+
+	mv.Call([]reflect.Value{argv.Elem()})
+	return
 }
