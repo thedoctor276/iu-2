@@ -1,14 +1,20 @@
 # iu
-Package to create user interfaces for iu apps.
+Package to create user interfaces with GO, HTML and CSS.
+
 ## Install
 ```
 go get -u github.com/maxence-charriere/iu
 ```
-## Concept
-**iu** is a tool to create apps using go programming language, HTML and CSS:
-* **UI** where the user interface is designed (this package).
 
-* **App** which is the container for the UI (currently a Mac OSX app, will come later on IOs, Android and Windows)
+## Available platforms
+- OSX
+![NO](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/No_icon_red.svg/16px-No_icon_red.svg.png) - very soon
+- IOS
+![NO](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/No_icon_red.svg/16px-No_icon_red.svg.png)
+- Android
+![NO](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/No_icon_red.svg/16px-No_icon_red.svg.png)
+- Windows
+![NO](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/No_icon_red.svg/16px-No_icon_red.svg.png)
 
 ## Getting started
 ### I. Create a view
