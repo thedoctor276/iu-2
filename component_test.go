@@ -15,7 +15,7 @@ func (hello Hello) Template() string {
 	return `
 <div id={{.ID}}>
     {{.Greeting.Render}}
-    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnInputChanged" "event"}}">
+    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnChange" "event"}}">
 </div>
     `
 }

@@ -11,69 +11,39 @@ go get -u github.com/maxence-charriere/iu
 * **App** which is the container for the UI (currently a Mac OSX app, will come later on IOs, Android and Windows)
 
 ## Getting started
-### I. Create a template
+### I. Create a view
 ```go
-const (
-	HelloTpl = `
-<div id={{.ID}}>
-    <h1>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>
-    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnInputChanged" "event"}}">
-</div>
-    `
-)
-```
-
-### II. Create a component
-```go
-type HelloComponent struct {
+type Hello struct {
 	Greeting string
 	Input    string
-	*iu.Composer
 }
 
-func (hello *HelloComponent) OnInputChanged(value string) {
-	hello.Greeting = value
-	hello.Sync()
+func (hello *Hello) Template() string {
+	return `
+<div id={{.ID}}>
+    <h1>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>
+    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnChange" "value"}}">
+</div>
+    `
 }
 
-func (hello *HelloComponent) Render() string {
-	return hello.Composer.Render(hello)
-}
-
-func (hello *HelloComponent) Sync() {
-	hello.Dirty()
-	hello.Render()
+func (hello *Hello) OnChange(name string) {
+    hello.Greeting = name
+    iu.SyncView(hello)
 }
 
 ```
 
-### II. Build a page
-```go
-func NewHelloPage() *iu.Page {
-	return &iu.Page{
-		Title: "Hello",
-		Lang:  "en",
-		CSS: []string{
-			"hello.css",
-		},
-
-func NewHelloComponent() *HelloComponent {
-	return &HelloComponent{
-		Composer: iu.NewComposer(HelloTpl),
-	}
-}
-```
-
-### III. Load it in the app
+### II. Load it in the app
 ```go
 func main() {
-	ctx := &iu.EmptyContext{}
+	ctx := New[osx|ios|android|windows]Context()
 
-	hello := iu.NewPage(NewHelloComponent(), iu.PageConfig{
+	page := iu.NewPage(&Hello{}, iu.PageConfig{
 		Title: "Hello page",
 		CSS:   []string{"hello.css"},
 	})
 
-	ctx.Navigate(hello)
+	ctx.Navigate(page)
 }
 ```
