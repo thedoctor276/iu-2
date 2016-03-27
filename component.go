@@ -16,7 +16,8 @@ var (
 )
 
 type Component struct {
-	composer Composer
+	page     *Page
+	view     View
 	id       string
 	template *template.Template
 }
@@ -29,28 +30,28 @@ func (comp *Component) Render() string {
 	var buffer bytes.Buffer
 	var err error
 
-	componentValue := reflect.ValueOf(comp)
-	componentType := componentValue.Type()
-	composerValue := reflect.Indirect(reflect.ValueOf(comp.composer))
-	composerType := composerValue.Type()
+	viewValue := reflect.Indirect(reflect.ValueOf(comp.view))
+	viewType := viewValue.Type()
+	viewInterfaceType := reflect.TypeOf((*View)(nil)).Elem()
 
-	m := composerMap{}
+	m := viewMap{}
 
-	for i := 0; i < composerType.NumField(); i++ {
-		fieldName := composerType.Field(i).Name
-		fieldType := composerType.Field(i).Type
+	for i := 0; i < viewType.NumField(); i++ {
+		fieldName := viewType.Field(i).Name
+		fieldType := viewType.Field(i).Type
 
-		if fieldType == componentType {
-			m[fieldName] = composerValue.Field(i).Interface()
+		if fieldType.Implements(viewInterfaceType) {
+			view := viewValue.Field(i).Interface().(View)
+			m[fieldName] = compoM.Component(view)
 		} else {
-			m[fieldName] = composerValue.Field(i).Interface()
+			m[fieldName] = viewValue.Field(i).Interface()
 		}
 	}
 
 	m["ID"] = comp.id
 
 	if comp.template == nil {
-		if comp.template, err = template.New("").Parse(comp.composer.Template()); err != nil {
+		if comp.template, err = template.New("").Parse(comp.view.Template()); err != nil {
 			iulog.Panic(err)
 		}
 	}
@@ -62,11 +63,13 @@ func (comp *Component) Render() string {
 	return buffer.String()
 }
 
-func NewComponent(composer Composer) *Component {
-	return &Component{
-		composer: composer,
-		id:       fmt.Sprintf("iu-%v", nextComponentId()),
+func NewComponent(view View) *Component {
+	component := &Component{
+		view: view,
+		id:   fmt.Sprintf("iu-%v", nextComponentId()),
 	}
+
+	return component
 }
 
 func nextComponentId() uint64 {
@@ -76,20 +79,3 @@ func nextComponentId() uint64 {
 	lastComponentID++
 	return lastComponentID
 }
-
-// func ForRangeComponents(top *Component, action func(comp *Component)) {
-// 	action(top)
-
-// 	componentType := componentValue.Type()
-//     composerValue := reflect.ValueOf(comp.composer)
-
-// 	for i := 0; i < componentValue.NumField(); i++ {
-// 		f := componentValue.Field(i)
-// 		t := f.Type()
-
-// 		if t == componentType {
-// 			c := f.Interface().(*Component)
-// 			ForRangeComponents(c, action)
-// 		}
-// 	}
-// }

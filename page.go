@@ -11,15 +11,34 @@ import (
 var (
 	pageTpl = strings.Trim(`
 <!doctype html>
-<html lang="{{.Config.Lang}}">
+<html lang="{{.Lang}}">
 <head>
-    <title>{{if .Config.Title}}{{.Config.Title}}{{else}}iu{{end}}</title>
+    <title>{{if .Title}}{{.Title}}{{else}}iu{{end}}</title>
     <meta charset="utf-8" /> 
-{{range .Config.CSS}}
+    
+    <style media="{{if .Media}}{{.Media}}{{else}}screen{{end}}" type="text/css">
+        html {
+            height: 100%;
+            width: 100%;
+            margin: 0pt;
+        }
+        
+        body {
+            height: 100%;
+            width: 100%;
+            margin: 0pt;
+            font-family: "Helvetica Neue", "Segoe UI";
+            font-size: 11pt;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+    </style>
+    
+{{range .CSS}}
     <link rel="stylesheet" href="{{.}}" />{{end}}
 </head>
 <body>
-{{.MainComponent.Render}}
+{{.MainView.Render}}
 
 <script>
 {{.FrameworkJS}}
@@ -34,89 +53,81 @@ var (
 type PageConfig struct {
 	Title string
 	Lang  string
+	Media string
 	CSS   []string
 	JS    []string
 }
 
 type Page struct {
-	config        PageConfig
-	mainComponent Component
-	context       Context
-	template      *template.Template
-	components    map[string]Component
+	OnLoad func()
+
+	config   PageConfig
+	mainView View
+	context  Context
+	template *template.Template
 }
 
 func (page *Page) Config() PageConfig {
 	return page.config
 }
 
-func (page *Page) MainComponent() Component {
-	return page.mainComponent
+func (page *Page) MainView() View {
+	return page.mainView
 }
 
 func (page *Page) Context() Context {
 	return page.context
 }
 
-func (page *Page) FrameworkJS() string {
-	return FrameworkJS()
-}
-
-func (page *Page) Component(id string) (component Component) {
-	var ok bool
-
-	if component, ok = page.components[id]; !ok {
-		iulog.Panicf("component with id = %v is not found in page %v", id, page.config.Title)
-	}
-
-	return
-}
-
-func (page *Page) RegisterComponent(component Component) {
-	var id string
-
-	if id = component.ID(); len(id) == 0 {
-		iulog.Panicf("can't register component: %p is not initialized", component)
-	}
-
-	page.components[id] = component
-}
-
-func (page *Page) UnregisterComponent(component Component) {
-	delete(page.components, component.ID())
-}
-
-func (page *Page) Init(ctx Context) {
-	var err error
-
-	if ctx == nil {
-		iulog.Panic("ctx can't be nil")
-	}
-
-	if page.template, err = template.New("").Parse(pageTpl); err != nil {
-		iulog.Panic(err)
-	}
-
-	page.context = ctx
-	//PairViewComponent(page, page.MainComponent())
-
-}
-
 func (page *Page) Render() string {
 	var buffer bytes.Buffer
 	var err error
 
-	if err = page.template.Execute(&buffer, page); err != nil {
+	m := map[string]interface{}{
+		"Title":       page.config.Title,
+		"Lang":        page.config.Lang,
+		"Media":       page.config.Media,
+		"CSS":         page.config.CSS,
+		"JS":          page.config.JS,
+		"MainView":    compoM.Component(page.mainView),
+		"FrameworkJS": FrameworkJS(),
+	}
+
+	if page.template == nil {
+		if page.template, err = template.New("").Parse(pageTpl); err != nil {
+			iulog.Panic(err)
+		}
+	}
+
+	if err = page.template.Execute(&buffer, m); err != nil {
 		iulog.Panic(err)
 	}
 
 	return buffer.String()
 }
 
-func NewPage(mainComponent Component, config PageConfig) *Page {
-	return &Page{
-		config:        config,
-		mainComponent: mainComponent,
-		components:    map[string]Component{},
+func (page *Page) Close() {
+	ForRangeViews(page.mainView, func(v View) (err error) {
+		err = UnregisterView(v)
+		return
+	})
+}
+
+func NewPage(mainView View, config PageConfig) *Page {
+	p := &Page{
+		config:   config,
+		mainView: mainView,
 	}
+
+	ForRangeViews(mainView, func(v View) (err error) {
+		if err = RegisterView(v); err != nil {
+			return
+		}
+
+		c := compoM.Component(v)
+		c.page = p
+		return
+	})
+
+	return p
 }

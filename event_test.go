@@ -1,143 +1,133 @@
 package iu
 
-// func TestTryCallViewEvent(t *testing.T) {
-// 	var ctx = &EmptyContext{}
-// 	var msg = "It works"
-// 	var result string
-// 	var onLoaded = func() { result = msg }
+import (
+	"encoding/json"
+	"testing"
+)
 
-// 	var view = &Page{
-// 		Title:    "Test",
-// 		OnLoaded: onLoaded,
-// 	}
+func TestCallViewEvent(t *testing.T) {
+	v := &World{
+		OnNothing: func() {
+			t.Log("OnNothing")
+		},
+	}
 
-// 	view.Init(ctx)
-// 	TryCallViewEvent(view, "OnLoaded")
+	if err := callViewEvent(v, "OnNothing", ""); err != nil {
+		t.Error(err)
+	}
+}
 
-// 	if result != msg {
-// 		t.Errorf("result should be %v: %v", msg, result)
-// 	}
-// }
+func TestCallViewEventNotSet(t *testing.T) {
+	v := &World{}
 
-// func TestTryCallComponentEvent(t *testing.T) {
-// 	var ctx = &EmptyContext{}
-// 	var arg = MouseEvent{}
-// 	var msg = "It works"
-// 	var result string
-// 	var onClick = func(event MouseEvent) { result = msg }
+	if err := callViewEvent(v, "OnNothing", ""); err != nil {
+		t.Error(err)
+	}
+}
 
-// 	var view = &Page{
-// 		Title: "Test",
-// 		Body: []Component{
-// 			&Div{
-// 				OnClick: onClick,
-// 			},
-// 		},
-// 	}
+func TestCallViewNonexistentEvent(t *testing.T) {
+	v := &World{}
 
-// 	view.Init(ctx)
-// 	TryCallComponentEvent(view.Body[0], "OnClick", arg)
+	if err := callViewEvent(v, "OnDrinkingBeer", ""); err == nil {
+		t.Error("should error")
+	}
+}
 
-// 	if result != msg {
-// 		t.Errorf("result should be %v: %v", msg, result)
-// 	}
-// }
+func TestCallViewNoEvent(t *testing.T) {
+	v := Hello{}
 
-// func TestTryCallEventNil(t *testing.T) {
-// 	var ctx = &EmptyContext{}
+	if err := callViewEvent(v, "Input", ""); err == nil {
+		t.Error("should error")
+	}
+}
 
-// 	var view = &Page{
-// 		Title: "Test",
-// 		Body: []Component{
-// 			&Div{},
-// 		},
-// 	}
+func TestCallViewMouseEvent(t *testing.T) {
+	var kes []byte
+	var err error
 
-// 	view.Init(ctx)
-// 	TryCallComponentEvent(view.Body[0], "OnClick", nil)
-// }
+	ke := MouseEvent{
+		MetaKey: true,
+		ClientX: 42,
+	}
 
-// func TestTryCallEventInvalidArg(t *testing.T) {
-// 	var ctx = &EmptyContext{}
-// 	var msg = "It works"
-// 	var result string
-// 	var onClick = func(event MouseEvent) { result = msg }
+	if kes, err = json.Marshal(ke); err != nil {
+		t.Fatal(err)
+	}
 
-// 	var view = &Page{
-// 		Title: "Test",
-// 		Body: []Component{
-// 			&Div{
-// 				OnClick: onClick,
-// 			},
-// 		},
-// 	}
+	v := &World{}
 
-// 	defer func() { recover() }()
+	if err = callViewEvent(v, "OnClick", string(kes)); err != nil {
+		t.Error(err)
+	}
+}
 
-// 	view.Init(ctx)
-// 	TryCallComponentEvent(view.Body[0], "OnClick", "Boo")
-// 	t.Error("should have panic")
-// }
+func TestCallViewWheelEvent(t *testing.T) {
+	var kes []byte
+	var err error
 
-// func TestTryCallEventDifferentArgLen(t *testing.T) {
-// 	var ctx = &EmptyContext{}
-// 	var arg = MouseEvent{}
-// 	var msg = "It works"
-// 	var result string
-// 	var onClick = func(event MouseEvent) { result = msg }
+	ke := WheelEvent{
+		DeltaX: 42,
+	}
 
-// 	var view = &Page{
-// 		Title: "Test",
-// 		Body: []Component{
-// 			&Div{
-// 				OnClick: onClick,
-// 			},
-// 		},
-// 	}
+	if kes, err = json.Marshal(ke); err != nil {
+		t.Fatal(err)
+	}
 
-// 	defer func() { recover() }()
+	v := &World{}
 
-// 	view.Init(ctx)
-// 	TryCallComponentEvent(view.Body[0], "OnClick", arg, "Boo")
-// 	t.Error("should have panic")
-// }
+	if err = callViewEvent(v, "OnWheel", string(kes)); err != nil {
+		t.Error(err)
+	}
+}
 
-// func TestTryCallInvalidEvent(t *testing.T) {
-// 	var ctx = &EmptyContext{}
+func TestCallViewKeyboardEvent(t *testing.T) {
+	var kes []byte
+	var err error
 
-// 	var view = &Page{
-// 		Title: "Test",
-// 		Body: []Component{
-// 			&Div{},
-// 		},
-// 	}
+	ke := KeyboardEvent{
+		CtrlKey: true,
+		KeyCode: Key4,
+	}
 
-// 	defer func() { recover() }()
+	if kes, err = json.Marshal(ke); err != nil {
+		t.Fatal(err)
+	}
 
-// 	view.Init(ctx)
-// 	TryCallComponentEvent(view.Body[0], "Title")
-// 	t.Error("should have panic")
-// }
+	v := &World{}
 
-// func TestTryCallComponentEventWithArg(t *testing.T) {
-// 	var JSONArg = `{"AltKey":false,"Button":0,"ClientX":627,"ClientY":344,"CtrlKey":false,"Detail":1,"MetaKey":false,"PageX":627,"PageY":344,"ScreenX":-1489,"ScreenY":557,"ShiftKey":false}`
-// 	var ctx = &EmptyContext{}
-// 	var ok bool
-// 	var onClick = func(event MouseEvent) { ok = true }
+	if err = callViewEvent(v, "OnChange", string(kes)); err != nil {
+		t.Error(err)
+	}
+}
 
-// 	var view = &Page{
-// 		Title: "Test",
-// 		Body: []Component{
-// 			&Div{
-// 				OnClick: onClick,
-// 			},
-// 		},
-// 	}
+func TestCallViewEventWithBool(t *testing.T) {
+	v := &World{}
 
-// 	view.Init(ctx)
-// 	tryCallComponentEventWithArg(view.Body[0], "OnClick", JSONArg)
+	if err := callViewEvent(v, "OnChecked", "true"); err != nil {
+		t.Error(err)
+	}
+}
 
-// 	if !ok {
-// 		t.Error("ok should be true")
-// 	}
-// }
+func TestCallViewEventWithString(t *testing.T) {
+	v := &World{}
+
+	if err := callViewEvent(v, "OnString", `"J'aime les filles"`); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCallViewEventWithNumber(t *testing.T) {
+	v := &World{}
+
+	if err := callViewEvent(v, "OnNumber", "42.42"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCallViewEventBadFormat(t *testing.T) {
+	v := &World{}
+
+	if err := callViewEvent(v, "OnChange", "[stupid no json]"); err == nil {
+		t.Error("should error")
+	}
+}

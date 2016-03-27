@@ -1,111 +1,57 @@
 package iu
 
-// func TestPageContext(t *testing.T) {
-// 	var context = &EmptyContext{}
-// 	var page = &Page{Title: "Test"}
+import "testing"
 
-// 	page.Init(context)
+func TestNewPage(t *testing.T) {
+	c := PageConfig{
+		Title: "Page test",
+	}
 
-// 	if ctx := page.Context(); ctx != context {
-// 		t.Error("ctx should be %v: %v", context, ctx)
-// 	}
-// }
+	v := &World{}
 
-// func TestPageFrameworkJS(t *testing.T) {
-// 	var page = &Page{Title: "Test"}
+	p := NewPage(v, c)
+	defer p.Close()
 
-// 	if js := page.FrameworkJS(); js != FrameworkJS() {
-// 		t.Error("js should be %v: %v", FrameworkJS(), js)
-// 	}
-// }
+	if conf := p.Config(); conf.Title != c.Title {
+		t.Errorf("conf should be %v: %v", c, conf)
+	}
 
-// func TestPageComponent(t *testing.T) {
-// 	var div = &Div{}
-// 	var ctx = &EmptyContext{}
-// 	var page = &Page{
-// 		Title: "Test",
-// 		Body:  []Component{div},
-// 	}
+	if conf := p.Config(); conf.Title != c.Title {
+		t.Errorf("conf should be %v: %v", c, conf)
+	}
 
-// 	page.Init(ctx)
+	if mainView := p.MainView(); mainView != v {
+		t.Errorf("mainView should be %v: %v", v, mainView)
+	}
 
-// 	if comp := page.Component(div.ID()); comp != div {
-// 		t.Errorf("comp: %p should be div: %p", comp, div)
-// 	}
-// }
+	if ctx := p.Context(); ctx != nil {
+		t.Error("ctx should be nil")
+	}
+}
 
-// func TestPageNonexistentComponent(t *testing.T) {
-// 	var ctx = &EmptyContext{}
-// 	var page = &Page{
-// 		Title: "Test",
-// 	}
+func TestNewPageWithLoopView(t *testing.T) {
+	v := &HelloLoop{
+		Greeting: &World{},
+	}
 
-// 	defer func() { recover() }()
+	v.Parent = v
 
-// 	page.Init(ctx)
-// 	page.Component("42")
-// 	t.Error("should have panic")
-// }
+	p := NewPage(v, PageConfig{
+		Title: "Page test",
+	})
+	defer p.Close()
+}
 
-// func TestPageRegisterNoneinitializedComponent(t *testing.T) {
-// 	var div = &Div{ComponentBase: &ComponentBase{}}
-// 	var page = &Page{
-// 		Title: "Test",
-// 	}
+func TestPageRender(t *testing.T) {
+	v := Hello{
+		Greeting: &World{},
+	}
 
-// 	defer func() { recover() }()
+	p := NewPage(v, PageConfig{
+		Title: "Page test",
+	})
+	defer p.Close()
 
-// 	page.RegisterComponent(div)
-// 	t.Error("should have panic")
-// }
-
-// func TestPageInit(t *testing.T) {
-// 	var context = &EmptyContext{}
-// 	var page = &Page{Title: "Test"}
-
-// 	page.Init(context)
-// }
-
-// func TestPageInitNoTitle(t *testing.T) {
-// 	var context = &EmptyContext{}
-// 	var page = &Page{}
-
-// 	defer func() { recover() }()
-
-// 	page.Init(context)
-// 	t.Error("should have panic")
-// }
-
-// func TestPageInitNilContext(t *testing.T) {
-// 	var page = &Page{Title: "Test"}
-
-// 	defer func() { recover() }()
-
-// 	page.Init(nil)
-// 	t.Error("should have panic")
-// }
-
-// func TestPageRender(t *testing.T) {
-// 	var context = &EmptyContext{}
-
-// 	var page = &Page{
-// 		Title: "Page",
-// 		Lang:  "en",
-// 		CSS: []string{
-// 			"test.css",
-// 			"test2.css",
-// 		},
-// 	}
-
-// 	page.Init(context)
-// 	t.Log(page.Render())
-// }
-
-// func TestPageRenderNoTemplate(t *testing.T) {
-// 	var page = &Page{Title: "Test"}
-
-// 	defer func() { recover() }()
-
-// 	page.Render()
-// 	t.Error("should have panic")
-// }
+	p.context = &EmptyContext{}
+	t.Log(p.Render())
+}
