@@ -17,6 +17,8 @@ go get -u github.com/maxence-charriere/iu
 ![NO](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/No_icon_red.svg/16px-No_icon_red.svg.png)
 
 ## Getting started
+
+
 ### I. Create a view
 ```go
 type Hello struct {
@@ -48,6 +50,8 @@ func (hello *Hello) OnChange(name string) {
 
 ### II. Load it in the app
 ```go
+var ctx *iuosx.Window
+
 func main() {
 	iuosx.OnLaunch = OnLaunch
 	iuosx.OnReopen = OnReopen
