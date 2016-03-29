@@ -76,3 +76,7 @@ func RegisterView(v View) error {
 func UnregisterView(v View) error {
 	return compoM.Unregister(v)
 }
+
+func ViewFromComponentID(ID string) View {
+	return compoM.View(ID)
+}

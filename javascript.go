@@ -11,6 +11,11 @@ const (
 	BlinkBridge             = "alert('Blink as backend is not yet supported');"
 
 	frameworkJSTemplate = `
+function InjectComponent(id, component) {
+    elem = document.getElementById(id);
+    elem.outerHTML = component;
+}
+
 function MakeMouseEvent(event) {
     var obj = {
         "AltKey": event.altKey,

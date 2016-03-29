@@ -12,7 +12,7 @@ func TestCallViewEvent(t *testing.T) {
 		},
 	}
 
-	if err := callViewEvent(v, "OnNothing", ""); err != nil {
+	if err := CallViewEvent(v, "OnNothing", ""); err != nil {
 		t.Error(err)
 	}
 }
@@ -20,7 +20,7 @@ func TestCallViewEvent(t *testing.T) {
 func TestCallViewEventNotSet(t *testing.T) {
 	v := &World{}
 
-	if err := callViewEvent(v, "OnNothing", ""); err != nil {
+	if err := CallViewEvent(v, "OnNothing", ""); err != nil {
 		t.Error(err)
 	}
 }
@@ -28,7 +28,7 @@ func TestCallViewEventNotSet(t *testing.T) {
 func TestCallViewNonexistentEvent(t *testing.T) {
 	v := &World{}
 
-	if err := callViewEvent(v, "OnDrinkingBeer", ""); err == nil {
+	if err := CallViewEvent(v, "OnDrinkingBeer", ""); err == nil {
 		t.Error("should error")
 	}
 }
@@ -36,7 +36,7 @@ func TestCallViewNonexistentEvent(t *testing.T) {
 func TestCallViewNoEvent(t *testing.T) {
 	v := Hello{}
 
-	if err := callViewEvent(v, "Input", ""); err == nil {
+	if err := CallViewEvent(v, "Input", ""); err == nil {
 		t.Error("should error")
 	}
 }
@@ -56,7 +56,7 @@ func TestCallViewMouseEvent(t *testing.T) {
 
 	v := &World{}
 
-	if err = callViewEvent(v, "OnClick", string(kes)); err != nil {
+	if err = CallViewEvent(v, "OnClick", string(kes)); err != nil {
 		t.Error(err)
 	}
 }
@@ -75,7 +75,7 @@ func TestCallViewWheelEvent(t *testing.T) {
 
 	v := &World{}
 
-	if err = callViewEvent(v, "OnWheel", string(kes)); err != nil {
+	if err = CallViewEvent(v, "OnWheel", string(kes)); err != nil {
 		t.Error(err)
 	}
 }
@@ -95,7 +95,7 @@ func TestCallViewKeyboardEvent(t *testing.T) {
 
 	v := &World{}
 
-	if err = callViewEvent(v, "OnChange", string(kes)); err != nil {
+	if err = CallViewEvent(v, "OnChange", string(kes)); err != nil {
 		t.Error(err)
 	}
 }
@@ -103,7 +103,7 @@ func TestCallViewKeyboardEvent(t *testing.T) {
 func TestCallViewEventWithBool(t *testing.T) {
 	v := &World{}
 
-	if err := callViewEvent(v, "OnChecked", "true"); err != nil {
+	if err := CallViewEvent(v, "OnChecked", "true"); err != nil {
 		t.Error(err)
 	}
 }
@@ -111,7 +111,7 @@ func TestCallViewEventWithBool(t *testing.T) {
 func TestCallViewEventWithString(t *testing.T) {
 	v := &World{}
 
-	if err := callViewEvent(v, "OnString", `"J'aime les filles"`); err != nil {
+	if err := CallViewEvent(v, "OnString", `"J'aime les filles"`); err != nil {
 		t.Error(err)
 	}
 }
@@ -119,7 +119,7 @@ func TestCallViewEventWithString(t *testing.T) {
 func TestCallViewEventWithNumber(t *testing.T) {
 	v := &World{}
 
-	if err := callViewEvent(v, "OnNumber", "42.42"); err != nil {
+	if err := CallViewEvent(v, "OnNumber", "42.42"); err != nil {
 		t.Error(err)
 	}
 }
@@ -127,7 +127,7 @@ func TestCallViewEventWithNumber(t *testing.T) {
 func TestCallViewEventBadFormat(t *testing.T) {
 	v := &World{}
 
-	if err := callViewEvent(v, "OnChange", "[stupid no json]"); err == nil {
+	if err := CallViewEvent(v, "OnChange", "[stupid no json]"); err == nil {
 		t.Error("should error")
 	}
 }

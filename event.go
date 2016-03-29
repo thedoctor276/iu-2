@@ -12,7 +12,7 @@ const (
 	DeltaPage
 )
 
-type eventMessage struct {
+type EventMessage struct {
 	ID   string
 	Name string
 	Arg  string
@@ -52,7 +52,7 @@ type KeyboardEvent struct {
 	ShiftKey bool
 }
 
-func callViewEvent(view View, name, arg string) (err error) {
+func CallViewEvent(view View, name string, arg string) (err error) {
 	var mv reflect.Value
 
 	v := reflect.ValueOf(view)
@@ -86,7 +86,6 @@ func callViewEvent(view View, name, arg string) (err error) {
 	argt := mt.In(0)
 	argv := reflect.New(argt)
 	argi := argv.Interface()
-	fmt.Println(reflect.TypeOf(argi))
 
 	if err = json.Unmarshal([]byte(arg), argi); err != nil {
 		return

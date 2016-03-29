@@ -59,11 +59,11 @@ type PageConfig struct {
 }
 
 type Page struct {
-	OnLoad func()
+	Context Context
+	OnLoad  func()
 
 	config   PageConfig
 	mainView View
-	context  Context
 	template *template.Template
 }
 
@@ -73,10 +73,6 @@ func (page *Page) Config() PageConfig {
 
 func (page *Page) MainView() View {
 	return page.mainView
-}
-
-func (page *Page) Context() Context {
-	return page.context
 }
 
 func (page *Page) Render() string {

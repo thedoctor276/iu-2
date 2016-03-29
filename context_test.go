@@ -19,6 +19,6 @@ func (ctx *EmptyContext) InjectComponent(component *Component) {
 }
 
 func (ctx *EmptyContext) Navigate(page *Page) {
-	page.context = ctx
-	// iulog.Printf(`Navigate -> %v`, page.Render())
+	page.Context = ctx
+	iulog.Printf(`Navigate -> %v`, page.Render())
 }

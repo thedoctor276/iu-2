@@ -23,10 +23,6 @@ func TestNewPage(t *testing.T) {
 	if mainView := p.MainView(); mainView != v {
 		t.Errorf("mainView should be %v: %v", v, mainView)
 	}
-
-	if ctx := p.Context(); ctx != nil {
-		t.Error("ctx should be nil")
-	}
 }
 
 func TestNewPageWithLoopView(t *testing.T) {
@@ -52,6 +48,6 @@ func TestPageRender(t *testing.T) {
 	})
 	defer p.Close()
 
-	p.context = &EmptyContext{}
+	p.Context = &EmptyContext{}
 	t.Log(p.Render())
 }

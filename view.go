@@ -14,7 +14,13 @@ type View interface {
 type viewMap map[string]interface{}
 
 func (m viewMap) OnEvent(eventName string, arg string) string {
-	return fmt.Sprintf("CallEventHandler(this.id, '%v', %v)", eventName, arg)
+	return fmt.Sprintf("CallEventHandler('%v', '%v', %v)", m["ID"], eventName, arg)
+}
+
+func newViewMap(ID string) viewMap {
+	return viewMap{
+		"ID": ID,
+	}
 }
 
 func ForRangeViews(top View, action func(view View) error) {
@@ -44,9 +50,9 @@ func SyncView(v View) {
 		iulog.Panicf(`component for %#v must be embedded in a page ~> use iu.NewPage(mainView View, config PageConfig) *Page`, v)
 	}
 
-	if c.page.Context() == nil {
+	if c.page.Context == nil {
 		iulog.Panicf(`component.page for %#v must have a context ~> use [Context].Navigate(page *Page)`, v)
 	}
 
-	c.page.Context().InjectComponent(c)
+	c.page.Context.InjectComponent(c)
 }
