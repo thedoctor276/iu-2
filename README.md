@@ -26,16 +26,22 @@ type Hello struct {
 
 func (hello *Hello) Template() string {
 	return `
-<div id={{.ID}}>
-    <h1>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>
-    <input type="text" placeholder="What is your name?" onchange="{{.OnEvent "OnChange" "value"}}">
+<div class="content">
+    <div id="{{.ID}}" class="hellobox">
+        <h1>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>
+        <input type="text" 
+               autofocus 
+               value="{{if .Greeting}}{{.Greeting}}{{end}}" 
+               placeholder="What is your name?" 
+               onchange="{{.OnEvent "OnChange" "value"}}">
+    </div>
 </div>
     `
 }
 
 func (hello *Hello) OnChange(name string) {
-    hello.Greeting = name
-    iu.SyncView(hello)
+	hello.Greeting = name
+	iu.SyncView(hello)
 }
 
 ```
@@ -43,13 +49,27 @@ func (hello *Hello) OnChange(name string) {
 ### II. Load it in the app
 ```go
 func main() {
-	ctx := New[osx|ios|android|windows]Context()
+	iuosx.OnLaunch = OnLaunch
+	iuosx.OnReopen = OnReopen
 
-	page := iu.NewPage(&Hello{}, iu.PageConfig{
+	iuosx.Run()
+}
+
+func OnLaunch() {
+	ctx = iuosx.NewWindow("hello", iuosx.WindowConfig{
+		Width:  1280,
+		Height: 720,
+	}) // IOS, Android and Windows will come later
+
+	p := iu.NewPage(&Hello{}, iu.PageConfig{
 		Title: "Hello page",
 		CSS:   []string{"hello.css"},
 	})
 
-	ctx.Navigate(page)
+	ctx.Navigate(p)
+}
+
+func OnReopen() {
+	ctx.Show()
 }
 ```
