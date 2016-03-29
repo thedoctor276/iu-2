@@ -86,3 +86,14 @@ func TestUnregisterView(t *testing.T) {
 	RegisterView(v)
 	UnregisterView(v)
 }
+
+func TestViewFromComponentID(t *testing.T) {
+	v := Hello{}
+
+	RegisterView(v)
+	defer UnregisterView(v)
+
+	c := compoM.Component(v)
+
+	ViewFromComponentID(c.ID())
+}

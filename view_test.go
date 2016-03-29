@@ -3,8 +3,8 @@ package iu
 import "testing"
 
 func TestViewMapOnEvent(t *testing.T) {
-	expected := "CallEventHandler(this.id, 'OnClick', event)"
-	m := viewMap{}
+	expected := "CallEventHandler('iu-42', 'OnClick', event)"
+	m := newViewMap("iu-42")
 
 	if js := m.OnEvent("OnClick", "event"); js != expected {
 		t.Errorf("js should be %v: %v", expected, js)

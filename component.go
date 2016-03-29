@@ -19,6 +19,7 @@ type Component struct {
 	page     *Page
 	view     View
 	id       string
+	mtx      sync.Mutex
 	template *template.Template
 }
 
@@ -30,11 +31,14 @@ func (comp *Component) Render() string {
 	var buffer bytes.Buffer
 	var err error
 
+	comp.mtx.Lock()
+	defer comp.mtx.Unlock()
+
 	viewValue := reflect.Indirect(reflect.ValueOf(comp.view))
 	viewType := viewValue.Type()
 	viewInterfaceType := reflect.TypeOf((*View)(nil)).Elem()
 
-	m := viewMap{}
+	m := newViewMap(comp.ID())
 
 	for i := 0; i < viewType.NumField(); i++ {
 		fieldName := viewType.Field(i).Name
@@ -43,12 +47,14 @@ func (comp *Component) Render() string {
 		if fieldType.Implements(viewInterfaceType) {
 			view := viewValue.Field(i).Interface().(View)
 			m[fieldName] = compoM.Component(view)
+		} else if fieldType == reflect.TypeOf((*string)(nil)).Elem() {
+			s := viewValue.Field(i).String()
+			s = template.HTMLEscapeString(s)
+			m[fieldName] = ToHTMLEntities(s)
 		} else {
 			m[fieldName] = viewValue.Field(i).Interface()
 		}
 	}
-
-	m["ID"] = comp.id
 
 	if comp.template == nil {
 		if comp.template, err = template.New("").Parse(comp.view.Template()); err != nil {
