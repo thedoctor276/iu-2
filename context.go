@@ -1,8 +1,6 @@
 package iu
 
-import "path/filepath"
-
-var Path func(...string) string = filepath.Join
+var Path func(...string) string
 
 type Context interface {
 	Name() string
