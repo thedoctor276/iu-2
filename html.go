@@ -3,17 +3,19 @@ package iu
 import "strconv"
 
 func ToHTMLEntities(line string) string {
-	var converted string = ""
-	for _, rune_value := range line {
-		converted += RuneToHTMLEntity(rune_value)
+	var converted string
+
+	for _, r := range line {
+		converted += runeToHTMLEntity(r)
 	}
+
 	return converted
 }
 
-func RuneToHTMLEntity(entity rune) string {
-	if entity < 128 {
-		return string(entity)
-	} else {
-		return "&#" + strconv.FormatInt(int64(entity), 10) + ";"
+func runeToHTMLEntity(r rune) string {
+	if r < 128 {
+		return string(r)
 	}
+
+	return "&#" + strconv.FormatInt(int64(r), 10) + ";"
 }
