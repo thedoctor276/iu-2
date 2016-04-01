@@ -1,15 +1,19 @@
-package iu
+package mac
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/maxence-charriere/iu"
+)
 
 func TestRegisterMenuHandler(t *testing.T) {
-	e := MenuElement{
+	e := iu.Menu{
 		Name:    "File/Quit",
 		Handler: func() { t.Log("I'm a menu handler") },
 	}
 
-	RegisterMenuHandler(e)
-	defer UnregisterMenuHandler(e.Name)
+	registerMenuHandler(e)
+	defer unregisterMenuHandler(e.Name)
 
 	if _, ok := menuHandlers[e.Name]; !ok {
 		t.Error("menu handler should have an entry with key", e.Name)
@@ -17,12 +21,12 @@ func TestRegisterMenuHandler(t *testing.T) {
 }
 
 func TestRegisterMenuHandlerWithoutHandler(t *testing.T) {
-	e := MenuElement{
+	e := iu.Menu{
 		Name: "File/Quit",
 	}
 
-	RegisterMenuHandler(e)
-	defer UnregisterMenuHandler(e.Name)
+	registerMenuHandler(e)
+	defer unregisterMenuHandler(e.Name)
 
 	if _, ok := menuHandlers[e.Name]; ok {
 		t.Error("menu handler should not have an entry with key", e.Name)
@@ -30,13 +34,13 @@ func TestRegisterMenuHandlerWithoutHandler(t *testing.T) {
 }
 
 func TestUnregisterMenuHandlerWithoutHandler(t *testing.T) {
-	e := MenuElement{
+	e := iu.Menu{
 		Name:    "File/Quit",
 		Handler: func() { t.Log("I'm a menu handler") },
 	}
 
-	RegisterMenuHandler(e)
-	UnregisterMenuHandler(e.Name)
+	registerMenuHandler(e)
+	unregisterMenuHandler(e.Name)
 
 	if _, ok := menuHandlers[e.Name]; ok {
 		t.Error("menu handler should not have an entry with key", e.Name)
@@ -44,15 +48,15 @@ func TestUnregisterMenuHandlerWithoutHandler(t *testing.T) {
 }
 
 func TestMenuHandler(t *testing.T) {
-	e := MenuElement{
+	e := iu.Menu{
 		Name:    "File/Quit",
 		Handler: func() { t.Log("I'm a menu handler") },
 	}
 
-	RegisterMenuHandler(e)
-	defer UnregisterMenuHandler(e.Name)
+	registerMenuHandler(e)
+	defer unregisterMenuHandler(e.Name)
 
-	if _, ok := MenuHandler(e.Name); !ok {
+	if _, ok := menuHandler(e.Name); !ok {
 		t.Error("menu handler should have an entry with key", e.Name)
 	}
 }
