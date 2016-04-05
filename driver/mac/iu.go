@@ -6,9 +6,14 @@ var (
 	OnLaunch func()
 	OnReopen func()
 	OnQuit   func()
+
+	running bool
 )
 
 func Run() {
+	running = true
+	defer func() { running = false }()
+
 	runApp()
 }
 
