@@ -111,8 +111,7 @@ void Menu_Set(Menu__ menu) {
 void Menu_SetDock(Menu__ menu) {
     NSString* name = [NSString stringWithUTF8String: menu.name];
     
-    NSMenu* nsmenu = ((AppDelegate*)NSApp.delegate).dock;   
-    NSLog(@"dock: %@", nsmenu); 
+    NSMenu* nsmenu = ((AppDelegate*)NSApp.delegate).dock;
     NSArray* path = [name componentsSeparatedByString:@"/"];
     
     for (int i = 0; i < path.count - 1; ++i) {        
@@ -143,6 +142,8 @@ void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title) {
         item = mitem;
         [nsmenu addItem: item];
     }
+    
+    item.indentationLevel = (NSInteger)menu.indent;
     
     if (shortcut.length != 0) {
         Menu_SetShortcut(item, shortcut);
@@ -184,3 +185,137 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     }
 }
 
+// ============================================================================
+// Window
+// ============================================================================
+
+@implementation WindowController
+- (WindowController*) initWithID:(NSString*)ID andConf:(WindowConfig__)conf {
+    NSRect contentRect = NSMakeRect(conf.x, conf.y, conf.width, conf.height);
+    
+    NSUInteger styleMask = NSTitledWindowMask
+        | NSFullSizeContentViewWindowMask
+        | NSClosableWindowMask
+        | NSMiniaturizableWindowMask
+        | NSResizableWindowMask;
+    
+    if (conf.borderless) {
+        styleMask = styleMask & ~NSTitledWindowMask;
+    }
+    
+    if (conf.disableResize) {
+        styleMask = styleMask & ~NSResizableWindowMask;
+    }
+    
+    if (conf.disableClose) {
+        styleMask = styleMask & ~NSClosableWindowMask;
+    }
+    
+    if (conf.disableMinimize) {
+        styleMask = styleMask & ~NSMiniaturizableWindowMask;
+    }
+
+    NSWindow* window = [[NSWindow alloc] initWithContentRect:contentRect
+                                                   styleMask:styleMask
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    
+    NSString* title = [NSString stringWithUTF8String: conf.title];
+    
+    if (title.length == 0) {
+        window.titlebarAppearsTransparent = YES;
+    } else {
+        window.title = title;
+    }
+    
+    WindowController* windowController = [[WindowController alloc] initWithWindow: window];
+    windowController.ID = ID;
+    windowController.windowFrameAutosaveName = ID;
+    window.delegate = windowController;
+    return windowController;
+}
+
+- (void)windowDidMiniaturize:(NSNotification *)notification {
+    onWindowMinimize((char*)[self.ID UTF8String]);
+}
+
+- (void)windowDidDeminiaturize:(NSNotification *)notification {
+    onWindowDeminimize((char*)[self.ID UTF8String]);
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
+    onWindowFullScreen((char*)[self.ID UTF8String]);
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+    onWindowExitFullScreen((char*)[self.ID UTF8String]);
+}
+
+- (void)windowDidMove:(NSNotification *)notification {
+    NSWindow* window = (NSWindow*)notification.object;
+    onWindowMove((char*)[self.ID UTF8String], window.frame.origin.x, window.frame.origin.y);
+}
+
+- (void)windowDidResize:(NSNotification *)notification {
+    NSWindow* window = (NSWindow*)notification.object;
+    onWindowResize((char*)[self.ID UTF8String], window.frame.size.width, window.frame.size.height);
+}
+
+- (void)windowDidBecomeKey:(NSNotification *)notification {
+    onWindowFocus((char*)[self.ID UTF8String]);
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification {
+    onWindowBlur((char*)[self.ID UTF8String]);
+}
+
+- (BOOL)windowShouldClose:(id)sender {
+    return onWindowClose((char*)[self.ID UTF8String]);
+}
+
+- (void)windowWillClose:(NSNotification *)notification {
+    WindowController* windowController = (__bridge_transfer WindowController*)((__bridge void*)self);
+}
+@end
+
+void* Window_Create(const char* ID, WindowConfig__ conf) {
+    NSString* IDString = [NSString stringWithUTF8String: ID];
+    WindowController* controller = [[WindowController alloc] initWithID:IDString
+                                                                andConf:conf];
+
+    return (__bridge_retained void*)controller;
+}
+
+void Window_Show(void* ptr) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    [windowController showWindow:windowController];
+}
+
+void Window_Move(void* ptr, CGFloat x, CGFloat y) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    
+    CGPoint origin = windowController.window.frame.origin;
+    origin.x = x;
+    origin.y = y;
+    [windowController.window setFrameOrigin:origin];
+}
+
+void Window_Center(void* ptr) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    [windowController.window center];
+}
+
+void Window_Resize(void* ptr, CGFloat width, CGFloat height) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    
+    CGRect frame = windowController.window.frame;
+    frame.size.width = width;
+    frame.size.height = height;
+    [windowController.window setFrame:frame
+                              display:YES];
+}
+
+void Window_Close(void* ptr) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    [windowController.window performClose:windowController];
+}

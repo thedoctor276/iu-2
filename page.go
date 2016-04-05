@@ -21,6 +21,7 @@ var (
             height: 100%;
             width: 100%;
             margin: 0pt;
+            background-color: transparent;
         }
         
         body {
@@ -31,6 +32,7 @@ var (
             font-size: 11pt;
             overflow-x: hidden;
             overflow-y: hidden;
+            background-color: transparent;
         }
     </style>
     
