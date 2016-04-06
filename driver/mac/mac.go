@@ -9,6 +9,8 @@ package mac
 */
 import "C"
 import (
+	"encoding/json"
+	"strconv"
 	"unsafe"
 
 	"github.com/maxence-charriere/iu"
@@ -119,6 +121,7 @@ func createWindow(ID string, conf WindowConfig) unsafe.Pointer {
 		width:           C.CGFloat(conf.Width),
 		height:          C.CGFloat(conf.Height),
 		title:           C.CString(conf.Title),
+		background:      C.uint(conf.Background),
 		borderless:      cbool(conf.Borderless),
 		disableResize:   cbool(conf.DisableResize),
 		disableClose:    cbool(conf.DisableClose),
@@ -147,6 +150,27 @@ func resizeWindow(ptr unsafe.Pointer, width float64, height float64) {
 
 func closeWindow(ptr unsafe.Pointer) {
 	C.Window_Close(ptr)
+}
+
+func navigateInWindow(ptr unsafe.Pointer, HTML string, baseURL string) {
+	cHTML := C.CString(HTML)
+	defer C.free(unsafe.Pointer(cHTML))
+
+	cbaseURL := C.CString(baseURL)
+	defer C.free(unsafe.Pointer(cbaseURL))
+
+	C.Window_Navigate(ptr, cHTML, cbaseURL)
+}
+
+func injectComponentInWindow(ptr unsafe.Pointer, ID string, component string) {
+	cID := C.CString(ID)
+	defer C.free(unsafe.Pointer(cID))
+
+	component = strconv.Quote(component)
+	ccompo := C.CString(component)
+	defer C.free(unsafe.Pointer(ccompo))
+
+	C.Window_InjectComponent(ptr, cID, ccompo)
 }
 
 //export onWindowMinimize
@@ -275,6 +299,40 @@ func onWindowClose(ID *C.char) C.BOOL {
 	return cbool(shouldClose)
 }
 
+//export onWindowNavigate
+func onWindowNavigate(ID *C.char) {
+	win, err := WindowByID(C.GoString(ID))
+
+	if err != nil {
+		iulog.Panic(err)
+	}
+
+	if win.OnNavigate != nil {
+		win.OnNavigate()
+	}
+}
+
+//export onCallEventHandler
+func onCallEventHandler(name *C.char, msgJSON *C.char) {
+	var msg iu.EventMessage
+	var err error
+
+	b := []byte(C.GoString(msgJSON))
+
+	if err = json.Unmarshal(b, &msg); err != nil {
+		iulog.Error(err)
+		return
+	}
+
+	if len(msg.ID) == 0 {
+		iulog.Errorf("no ID in %v", msg)
+		return
+	}
+
+	v := iu.ViewFromComponentID(msg.ID)
+	iu.CallViewEvent(v, msg.Name, msg.Arg)
+}
+
 // ============================================================================
 // Util
 // ============================================================================
@@ -285,4 +343,8 @@ func cbool(b bool) C.BOOL {
 	}
 
 	return 0
+}
+
+func resourcePath() string {
+	return C.GoString(C.ResourcePath())
 }
