@@ -4,12 +4,23 @@ import (
 	"fmt"
 	"unsafe"
 
+	"github.com/maxence-charriere/iu"
 	"github.com/maxence-charriere/iu-log"
+)
+
+const (
+	WindowBackgroundSolid WindowBackground = iota
+	WindowBackgroundLight
+	WindowBackgroundMediumLight
+	WindowBackgroundDark
+	WindowBackgroundUltraDark
 )
 
 var (
 	windows = map[string]*Window{}
 )
+
+type WindowBackground uint
 
 type WindowConfig struct {
 	X               float64
@@ -17,6 +28,7 @@ type WindowConfig struct {
 	Width           float64
 	Height          float64
 	Title           string
+	Background      WindowBackground
 	Borderless      bool
 	DisableResize   bool
 	DisableClose    bool
@@ -33,8 +45,10 @@ type Window struct {
 	OnFocus          func()
 	OnBlur           func()
 	OnClose          func() bool
+	OnNavigate       func()
 
-	ptr unsafe.Pointer
+	currentPage *iu.Page
+	ptr         unsafe.Pointer
 }
 
 func (win *Window) Show() {
@@ -55,6 +69,25 @@ func (win *Window) Resize(width float64, height float64) {
 
 func (win *Window) Close() {
 	closeWindow(win.ptr)
+}
+
+func (win *Window) CurrentPage() *iu.Page {
+	return win.currentPage
+}
+
+func (win *Window) Navigate(page *iu.Page) {
+	if page != win.currentPage && win.currentPage != nil {
+		win.currentPage.Close()
+	}
+
+	win.currentPage = page
+	page.Context = win
+	win.Show()
+	navigateInWindow(win.ptr, page.Render(), iu.Path())
+}
+
+func (win *Window) InjectComponent(component *iu.Component) {
+	injectComponentInWindow(win.ptr, component.ID(), component.Render())
 }
 
 func CreateWindow(ID string, conf WindowConfig) *Window {

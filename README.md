@@ -19,8 +19,52 @@ go get -u github.com/maxence-charriere/iu
 ## Getting started
 ![Hello](https://www.dropbox.com/s/kagdq53o2j7ttr0/Screen%20Shot%202016-03-28%20at%2018.11.51.png?raw=1)
 
-### I. Create a view
 ```go
+// main.go
+
+func main() {
+	mac.SetMenu(mac.MenuQuit)
+	mac.SetMenu(mac.MenuClose)
+
+	mac.OnLaunch = onLaunch
+	mac.OnReopen = onReopen
+
+	mac.Run()
+}
+
+func onLaunch() {
+	win := newMainWindow()
+	win.Show()
+}
+
+func onReopen() {
+	win, err := mac.WindowByID("Main")
+
+	if err != nil {
+		win = newMainWindow()
+	}
+
+	win.Show()
+}
+
+func newMainWindow() *mac.Window {
+	win := mac.CreateWindow("Main", mac.WindowConfig{
+		Width:      1240,
+		Height:     720,
+		Background: mac.WindowBackgroundDark,
+	})
+
+	p := iu.NewPage(&Hello{}, iu.PageConfig{
+		CSS: []string{"hello.css"},
+	})
+
+	win.Navigate(p)
+	return win
+}
+
+```
+```go
+// hello.go
 type Hello struct {
 	Greeting string
 	Input    string
@@ -45,35 +89,50 @@ func (hello *Hello) OnChange(name string) {
 	hello.Greeting = name
 	iu.SyncView(hello)
 }
-
 ```
-
-### II. Load it in the app
-```go
-var ctx *iuosx.Window
-
-func main() {
-	iuosx.OnLaunch = OnLaunch
-	iuosx.OnReopen = OnReopen
-
-	iuosx.Run()
+```css
+html {
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-image: url("bg.jpg");
 }
 
-func OnLaunch() {
-	ctx = iuosx.NewWindow("hello", iuosx.WindowConfig{
-		Width:  1280,
-		Height: 720,
-	}) // IOS, Android and Windows will come later
-
-	p := iu.NewPage(&Hello{}, iu.PageConfig{
-		Title: "Hello page",
-		CSS:   []string{"hello.css"},
-	})
-
-	ctx.Navigate(p)
+body {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.1);    
 }
 
-func OnReopen() {
-	ctx.Show()
+h1 {
+    font-weight: 300;
+}
+
+input {
+    font-size: 11pt;
+    border: 0pt;
+    border-left: 2pt;
+    border-color: lightgrey;
+    background-color: transparent;
+    color: white;
+    border-style: solid;
+    box-shadow: none;
+    padding: 5pt;
+    outline: none;
+}
+
+input:focus {
+    border-color: dodgerblue;
+}
+
+.content {
+    margin: 0pt;
+}
+
+.hellobox {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    padding: 50px;
+    transform: translate(-50%, -50%);
 }
 ```

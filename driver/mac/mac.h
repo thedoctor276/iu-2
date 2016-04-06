@@ -2,6 +2,7 @@
 #define mac_h
 
 #import <Cocoa/Cocoa.h>
+#import <WebKit/Webkit.h>
 
 // ============================================================================
 // App
@@ -9,7 +10,7 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property NSMenu* dock;
 
-- (AppDelegate*) init;
+- (instancetype) init;
 - (void) onMenuClick:(id)sender;
 @end
 
@@ -41,6 +42,14 @@ void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title);
 void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut);
 
 // ============================================================================
+// WebView
+// ============================================================================
+
+@interface WKWebView (withDrawsBackground)
+- (void)_setDrawsTransparentBackground:(BOOL)drawsTransparentBackground;
+@end
+
+// ============================================================================
 // Window
 // ============================================================================
 
@@ -50,16 +59,23 @@ typedef struct WindowConfig__ {
     CGFloat width;
     CGFloat height;
     const char* title;
+    unsigned int background;
     BOOL borderless;
     BOOL disableResize;
     BOOL disableClose;
     BOOL disableMinimize;
 } WindowConfig__;
 
-@interface WindowController : NSWindowController <NSWindowDelegate>
+@interface WindowController : NSWindowController <NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler>
 @property NSString* ID;
+@property (weak) WKWebView* webView;
 
-- (WindowController*) initWithID:(NSString*)ID andConf:(WindowConfig__)conf;
+- (instancetype) initWithID:(NSString*)ID andConf:(WindowConfig__)conf;
+- (void) setupWebView;
+- (void) setupCustomTitleBar;
+@end
+
+@interface TitleBar : NSView
 @end
 
 void* Window_Create(const char* ID, WindowConfig__ conf);
@@ -68,5 +84,12 @@ void Window_Move(void* ptr, CGFloat x, CGFloat y);
 void Window_Center(void* ptr);
 void Window_Resize(void* ptr, CGFloat width, CGFloat height);
 void Window_Close(void* ptr);
+void Window_Navigate(void* ptr, const char* HTML, const char* baseURL);
+void Window_InjectComponent(void* ptr, const char* ID, const char* component);
 
+// ============================================================================
+// Util
+// ============================================================================
+
+const char* ResourcePath();
 #endif /* mac_h */

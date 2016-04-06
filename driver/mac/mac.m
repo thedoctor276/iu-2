@@ -1,23 +1,13 @@
 #include "_cgo_export.h"
 #include "mac.h"
-#import <WebKit/WebKit.h>
-
-// This macro is used to defer the execution of a block of code in the main
-// event loop.
-#define defer(code) \
-  dispatch_async(dispatch_get_main_queue(), ^{ code })
-
-// This macro is used to execute a block of code in the main event loop while
-// waiting for it to complete.
-#define synchronize(code) \
-  dispatch_sync(dispatch_get_main_queue(), ^{ code })
+#import <QuartzCore/QuartzCore.h>
 
 // ============================================================================
 // App
 // ============================================================================
 
 @implementation AppDelegate
-- (AppDelegate*) init {
+- (instancetype) init {
     self.dock = [[NSMenu alloc] initWithTitle:@""];
     return self;
 }
@@ -63,9 +53,7 @@ void App_Run() {
 }
 
 void App_Quit() {
-    defer(
-        [NSApp terminate:nil];
-    );
+    [NSApp terminate:nil];
 }
 
 // ============================================================================
@@ -190,7 +178,7 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
 // ============================================================================
 
 @implementation WindowController
-- (WindowController*) initWithID:(NSString*)ID andConf:(WindowConfig__)conf {
+- (instancetype) initWithID:(NSString*)ID andConf:(WindowConfig__)conf {
     NSRect contentRect = NSMakeRect(conf.x, conf.y, conf.width, conf.height);
     
     NSUInteger styleMask = NSTitledWindowMask
@@ -220,19 +208,91 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
                                                      backing:NSBackingStoreBuffered
                                                        defer:NO];
     
+    NSVisualEffectView* visualEffectView = nil;
+    
+    if (conf.background != 0) {
+        visualEffectView = [[NSVisualEffectView alloc] initWithFrame: contentRect];
+        
+        switch (conf.background) {
+            case 2:
+                visualEffectView.material = NSVisualEffectMaterialMediumLight;
+                break;
+                
+            case 3:
+                visualEffectView.material = NSVisualEffectMaterialDark;
+                break;
+                
+            case 4:
+                visualEffectView.material = NSVisualEffectMaterialUltraDark;
+                break;
+                
+            default:
+                visualEffectView.material = NSVisualEffectMaterialLight;
+                break;
+        }
+        
+        visualEffectView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+        visualEffectView.state = NSVisualEffectStateActive;
+        window.contentView = visualEffectView;
+    }
+    
+    self = [self initWithWindow: window];
+    self.ID = ID;
+    self.windowFrameAutosaveName = ID;
+    window.delegate = self;
+    
+    [self setupWebView];
+    
     NSString* title = [NSString stringWithUTF8String: conf.title];
     
     if (title.length == 0) {
-        window.titlebarAppearsTransparent = YES;
+        [self setupCustomTitleBar];
     } else {
         window.title = title;
     }
     
-    WindowController* windowController = [[WindowController alloc] initWithWindow: window];
-    windowController.ID = ID;
-    windowController.windowFrameAutosaveName = ID;
-    window.delegate = windowController;
-    return windowController;
+    return self;
+}
+
+- (void) setupWebView {
+    WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+    WKUserContentController* userContentController = [[WKUserContentController alloc] init];
+    [userContentController addScriptMessageHandler:self name:@"onCallEventHandler"];
+    configuration.userContentController = userContentController;
+    
+    WKWebView* webView = [[WKWebView alloc] initWithFrame: NSMakeRect(0, 0, 0, 0)
+                                            configuration:configuration];
+    [webView _setDrawsTransparentBackground:YES];
+    webView.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.window.contentView addSubview: webView];
+    
+    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat: @"|[webView]|"
+                                                                                    options: 0
+                                                                                    metrics: nil
+                                                                                      views: NSDictionaryOfVariableBindings(webView)]];
+    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat: @"V:|[webView]|"
+                                                                                    options: 0
+                                                                                    metrics: nil
+                                                                                      views: NSDictionaryOfVariableBindings(webView)]];
+    self.webView = webView;
+    webView.navigationDelegate = self;
+    webView.UIDelegate = self;
+}
+
+- (void) setupCustomTitleBar {
+    self.window.titlebarAppearsTransparent = YES;
+    
+    TitleBar* titleBar = [[TitleBar alloc] init];
+    [self.window.contentView addSubview:titleBar];
+    titleBar.translatesAutoresizingMaskIntoConstraints = false;
+    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat: @"|[titleBar]|"
+                                                                                    options: 0
+                                                                                    metrics: nil
+                                                                                      views: NSDictionaryOfVariableBindings(titleBar)]];
+    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat: @"V:|[titleBar(==22)]"
+                                                                                    options: 0
+                                                                                    metrics: nil
+                                                                                      views: NSDictionaryOfVariableBindings(titleBar)]];
 }
 
 - (void)windowDidMiniaturize:(NSNotification *)notification {
@@ -274,7 +334,35 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
 }
 
 - (void)windowWillClose:(NSNotification *)notification {
+    [self.webView.configuration.userContentController removeScriptMessageHandlerForName:@"onCallEventHandler"];
+    
     WindowController* windowController = (__bridge_transfer WindowController*)((__bridge void*)self);
+}
+
+- (void) webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation {
+    onWindowNavigate((char*)[self.ID UTF8String]);
+}
+
+- (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WKFrameInfo*)frame completionHandler:(void (^)(void))completionHandler {
+    NSAlert* alert = [[NSAlert alloc] init];
+    [alert setMessageText:message];
+    [alert beginSheetModalForWindow:self.window
+                  completionHandler:nil];
+    
+    completionHandler();
+}
+
+- (void) userContentController:(nonnull WKUserContentController *)userContentController didReceiveScriptMessage:(nonnull WKScriptMessage *)message {
+    if ([message.name  isEqual: @"onCallEventHandler"]) {
+        NSString* msg = (NSString*)message.body;
+        onCallEventHandler((char*)[self.ID UTF8String], (char*)[msg UTF8String]);
+    }
+}
+@end
+
+@implementation TitleBar
+- (void)mouseDragged:(nonnull NSEvent*)theEvent {
+    [[self window] performWindowDragWithEvent:theEvent];
 }
 @end
 
@@ -318,4 +406,32 @@ void Window_Resize(void* ptr, CGFloat width, CGFloat height) {
 void Window_Close(void* ptr) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     [windowController.window performClose:windowController];
+}
+
+void Window_Navigate(void* ptr, const char* HTML, const char* baseURL) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    
+    NSString* html = [NSString stringWithUTF8String: HTML];
+    NSURL* base = [NSURL fileURLWithPath:[NSString stringWithUTF8String: baseURL]];
+    
+    [windowController.webView loadHTMLString:html
+                                     baseURL:base];
+}
+
+void Window_InjectComponent(void* ptr, const char* ID, const char* component) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    
+    NSString* call = [NSString stringWithFormat:@"InjectComponent(\"%s\", %s)", ID, component];
+    [windowController.webView evaluateJavaScript: call
+                               completionHandler: nil];
+}
+
+// ============================================================================
+// Util
+// ============================================================================
+
+const char* ResourcePath() {
+    NSBundle* mainBundle;
+    mainBundle = [NSBundle mainBundle];
+    return mainBundle.resourcePath.UTF8String;
 }

@@ -26,8 +26,9 @@ func onLaunch() {
 	iulog.Warn("OnLaunch")
 
 	win := mac.CreateWindow("Main", mac.WindowConfig{
-		Width:  1240,
-		Height: 720,
+		Width:      1240,
+		Height:     720,
+		Background: mac.WindowBackgroundDark,
 	})
 
 	win.OnMinimize = func() { iulog.Warn("OnMinimize") }
@@ -46,8 +47,10 @@ func onLaunch() {
 	win.Show()
 
 	win2 := mac.CreateWindow("Pref", mac.WindowConfig{
-		Width:  1240,
-		Height: 720,
+		Width:      1240,
+		Height:     720,
+		Background: mac.WindowBackgroundMediumLight,
+        Title: "Preferences",
 	})
 
 	win2.Show()
@@ -63,6 +66,7 @@ func onReopen() {
 		win = mac.CreateWindow("Main", mac.WindowConfig{
 			Width:  1240,
 			Height: 720,
+            Background: mac.WindowBackgroundLight,
 		})
 
 		iulog.Warn("Window recreated")
