@@ -2,16 +2,6 @@
 #include "mac.h"
 #import <QuartzCore/QuartzCore.h>
 
-// This macro is used to defer the execution of a block of code in the main
-// event loop.
-#define defer(code) \
-  dispatch_async(dispatch_get_main_queue(), ^{ code })
-
-// This macro is used to execute a block of code in the main event loop while
-// waiting for it to complete.
-#define synchronize(code) \
-  dispatch_sync(dispatch_get_main_queue(), ^{ code })
-
 // ============================================================================
 // App
 // ============================================================================
