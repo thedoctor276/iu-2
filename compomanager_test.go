@@ -3,7 +3,7 @@ package iu
 import "testing"
 
 func TestCompoManagerRegister(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	manager := newCompoManager()
 	manager.Register(v)
@@ -14,7 +14,7 @@ func TestCompoManagerRegister(t *testing.T) {
 }
 
 func TestCompoManagerRegisterExistentView(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	manager := newCompoManager()
 	manager.Register(v)
@@ -22,7 +22,7 @@ func TestCompoManagerRegisterExistentView(t *testing.T) {
 }
 
 func TestCompoManagerUnregister(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	manager := newCompoManager()
 	manager.Register(v)
@@ -34,14 +34,14 @@ func TestCompoManagerUnregister(t *testing.T) {
 }
 
 func TestCompoManagerUnregisterNonexistent(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	manager := newCompoManager()
 	manager.Unregister(v)
 }
 
 func TestCompoManagerComponent(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	manager := newCompoManager()
 	manager.Register(v)
@@ -51,7 +51,7 @@ func TestCompoManagerComponent(t *testing.T) {
 func TestCompoManagerNoRegisteredComponent(t *testing.T) {
 	defer func() { recover() }()
 
-	v := Hello{}
+	v := &Hello{}
 
 	manager := newCompoManager()
 	manager.Component(v)
@@ -59,7 +59,7 @@ func TestCompoManagerNoRegisteredComponent(t *testing.T) {
 }
 
 func TestCompoManagerView(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	manager := newCompoManager()
 	manager.Register(v)
@@ -77,18 +77,18 @@ func TestCompoManagerNoRegisteredView(t *testing.T) {
 }
 
 func TestRegisterView(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 	RegisterView(v)
 }
 
 func TestUnregisterView(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 	RegisterView(v)
 	UnregisterView(v)
 }
 
 func TestViewFromComponentID(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	RegisterView(v)
 	defer UnregisterView(v)

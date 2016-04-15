@@ -8,4 +8,6 @@ type Context interface {
 	Navigate(page *Page)
 
 	InjectComponent(component *Component)
+
+	ShowContextMenu(menus []Menu, compoID string)
 }

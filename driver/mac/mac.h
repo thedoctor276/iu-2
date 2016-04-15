@@ -25,19 +25,22 @@ void App_Quit();
 typedef struct Menu__ {
     const char* name;
     const char* shortcut;
-    const char* nativeAction;
+    const char* handlerName;
+    const char* compoID;
     unsigned int indent;
-    BOOL enabled;
+    BOOL disabled;
     BOOL separator;
 } Menu__;
 
 @interface MenuItem : NSMenuItem
 @property NSString* name;
+@property NSString* compoID;
 @end
 
 NSMenu* Menu_GetOrSet(NSMenu* base, NSString* name);
 void Menu_Set(Menu__ nsmenu);
 void Menu_SetDock(Menu__ nsmenu);
+void Menu_SetContext(NSMenu* ctx, Menu__ menu);
 void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title);
 void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut);
 
@@ -86,6 +89,7 @@ void Window_Resize(void* ptr, CGFloat width, CGFloat height);
 void Window_Close(void* ptr);
 void Window_Navigate(void* ptr, const char* HTML, const char* baseURL);
 void Window_InjectComponent(void* ptr, const char* ID, const char* component);
+void Window_ShowContextMenu(void* ptr, const Menu__* menus, int count);
 
 // ============================================================================
 // Util

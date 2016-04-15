@@ -34,7 +34,7 @@ func TestCallViewNonexistentEvent(t *testing.T) {
 }
 
 func TestCallViewNoEvent(t *testing.T) {
-	v := Hello{}
+	v := &Hello{}
 
 	if err := CallViewEvent(v, "Input", ""); err == nil {
 		t.Error("should error")

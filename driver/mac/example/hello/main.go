@@ -7,6 +7,10 @@ import (
 
 func main() {
 	mac.SetMenu(mac.MenuQuit)
+	mac.SetMenu(mac.MenuCut)
+	mac.SetMenu(mac.MenuCopy)
+	mac.SetMenu(mac.MenuPaste)
+	mac.SetMenu(mac.MenuSelectAll)
 	mac.SetMenu(mac.MenuClose)
 
 	mac.OnLaunch = onLaunch
@@ -37,7 +41,20 @@ func newMainWindow() *mac.Window {
 		Background: mac.WindowBackgroundDark,
 	})
 
-	p := iu.NewPage(&Hello{}, iu.PageConfig{
+	hello := &Hello{
+		ContextMenu: []iu.Menu{
+			iu.Menu{
+				Name:     "Custom button",
+				Shortcut: "meta+k",
+			},
+			iu.Menu{Separator: true},
+			mac.CtxMenuCut,
+			mac.CtxMenuCopy,
+			mac.CtxMenuPaste,
+		},
+	}
+
+	p := iu.NewPage(hello, iu.PageConfig{
 		CSS: []string{"hello.css"},
 	})
 

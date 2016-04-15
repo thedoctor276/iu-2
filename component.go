@@ -69,6 +69,16 @@ func (comp *Component) Render() string {
 	return buffer.String()
 }
 
+func (comp *Component) MustBeUsable() {
+	if comp.page == nil {
+		iulog.Panicf(`component for %#v must be embedded in a page ~> use iu.NewPage(mainView View, config PageConfig) *Page`, comp.view)
+	}
+
+	if comp.page.Context == nil {
+		iulog.Panicf(`component.page for %#v must have a context ~> use [Context].Navigate(page *Page)`, comp.view)
+	}
+}
+
 func NewComponent(view View) *Component {
 	component := &Component{
 		view: view,

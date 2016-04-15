@@ -14,6 +14,10 @@ type View interface {
 type viewMap map[string]interface{}
 
 func (m viewMap) OnEvent(eventName string, arg string) string {
+	if len(arg) == 0 {
+		arg = "event"
+	}
+
 	return fmt.Sprintf("CallEventHandler('%v', '%v', %v)", m["ID"], eventName, arg)
 }
 
@@ -45,14 +49,26 @@ func ForRangeViews(top View, action func(view View) error) {
 
 func SyncView(v View) {
 	c := compoM.Component(v)
-
-	if c.page == nil {
-		iulog.Panicf(`component for %#v must be embedded in a page ~> use iu.NewPage(mainView View, config PageConfig) *Page`, v)
-	}
-
-	if c.page.Context == nil {
-		iulog.Panicf(`component.page for %#v must have a context ~> use [Context].Navigate(page *Page)`, v)
-	}
-
+	c.MustBeUsable()
 	c.page.Context.InjectComponent(c)
+}
+
+func ShowContextMenu(v View) {
+	val := reflect.Indirect(reflect.ValueOf(v))
+	cmVal := val.FieldByName("ContextMenu")
+	cmType := cmVal.Type()
+
+	if cmVal.Kind() != reflect.Slice {
+		iulog.Panicf("ContextMenu field in %#v is not a slice", v)
+	}
+
+	if cmType.Elem() != reflect.TypeOf((*Menu)(nil)).Elem() {
+		iulog.Panicf("ContextMenu field in %#v is not a slice of iu.Menu", v)
+	}
+
+	m := cmVal.Interface().([]Menu)
+
+	c := compoM.Component(v)
+	c.MustBeUsable()
+	c.page.Context.ShowContextMenu(m, c.ID())
 }

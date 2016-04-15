@@ -32,7 +32,13 @@
 
 - (void) onMenuClick:(id)sender {
     MenuItem* item = (MenuItem*)sender;
-    onMenuClick((char*)[item.name UTF8String]);
+    
+    if (item.compoID.length == 0) {
+        onMenuClick((char*)[item.name UTF8String]);
+        return;
+    }
+    
+    onContextMenuClick((char*)[item.name UTF8String], (char*)[item.compoID UTF8String]);
 }
 @end
 
@@ -110,6 +116,18 @@ void Menu_SetDock(Menu__ menu) {
     Menu_SetMenuItem(nsmenu, menu, title);
 }
 
+void Menu_SetContext(NSMenu* ctx, Menu__ menu) {
+    NSString* name = [NSString stringWithUTF8String: menu.name];
+    NSArray* path = [name componentsSeparatedByString:@"/"];
+    
+    for (int i = 0; i < path.count - 1; ++i) {
+        ctx = Menu_GetOrSet(ctx, path[i]);
+    }
+    
+    NSString* title = (NSString*)path.lastObject;
+    Menu_SetMenuItem(ctx, menu, title);
+}
+
 void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title) {
     if (menu.separator) {
         [nsmenu addItem: [NSMenuItem separatorItem]];
@@ -118,7 +136,7 @@ void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title) {
     
     NSString* name = [NSString stringWithUTF8String: menu.name];
     NSString* shortcut = [NSString stringWithUTF8String: menu.shortcut];
-    NSString* nativeAction = [NSString stringWithUTF8String: menu.nativeAction];
+    NSString* handlerName = [NSString stringWithUTF8String: menu.handlerName];
     
     NSMenuItem* item = [nsmenu itemWithTitle: title];
     
@@ -127,6 +145,12 @@ void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title) {
                                                    action:nil
                                             keyEquivalent:@""];
         mitem.name = name;
+        
+        if (menu.compoID != NULL){
+            NSString* compoID = [NSString stringWithUTF8String: menu.compoID];
+            mitem.compoID = compoID;
+        }
+        
         item = mitem;
         [nsmenu addItem: item];
     }
@@ -137,15 +161,15 @@ void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title) {
         Menu_SetShortcut(item, shortcut);
     }
     
-    if (nativeAction.length != 0) {
-        item.action = NSSelectorFromString(nativeAction);
+    if (handlerName.length != 0) {
+        item.action = NSSelectorFromString(handlerName);
         return;
     }
     
-    if (menu.enabled) {
-        item.action = @selector(onMenuClick:);
-    } else {
+    if (menu.disabled) {
         item.action = nil;
+    } else {
+        item.action = @selector(onMenuClick:);
     }
 }
 
@@ -337,6 +361,7 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     [self.webView.configuration.userContentController removeScriptMessageHandlerForName:@"onCallEventHandler"];
     
     WindowController* windowController = (__bridge_transfer WindowController*)((__bridge void*)self);
+    windowController.window.delegate = nil;
 }
 
 - (void) webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation {
@@ -424,6 +449,22 @@ void Window_InjectComponent(void* ptr, const char* ID, const char* component) {
     NSString* call = [NSString stringWithFormat:@"InjectComponent(\"%s\", %s)", ID, component];
     [windowController.webView evaluateJavaScript: call
                                completionHandler: nil];
+}
+
+void Window_ShowContextMenu(void* ptr, const Menu__* menus, int count) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    
+    NSMenu* ctxm = [[NSMenu alloc] initWithTitle:@"Context Menu"];
+    
+    for (int i = 0; i < count; ++i) {
+        Menu_SetContext(ctxm, menus[i]);
+    }
+    
+    NSPoint p = [windowController.window mouseLocationOutsideOfEventStream];
+
+    [ctxm popUpMenuPositioningItem:ctxm.itemArray[0]
+                        atLocation:p
+                            inView:windowController.webView];
 }
 
 // ============================================================================

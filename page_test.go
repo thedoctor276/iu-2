@@ -35,11 +35,12 @@ func TestNewPageWithLoopView(t *testing.T) {
 	p := NewPage(v, PageConfig{
 		Title: "Page test",
 	})
+
 	defer p.Close()
 }
 
 func TestPageRender(t *testing.T) {
-	v := Hello{
+	v := &Hello{
 		Greeting: &World{},
 	}
 

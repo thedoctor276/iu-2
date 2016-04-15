@@ -90,6 +90,10 @@ func (win *Window) InjectComponent(component *iu.Component) {
 	injectComponentInWindow(win.ptr, component.ID(), component.Render())
 }
 
+func (win *Window) ShowContextMenu(menus []iu.Menu, compoID string) {
+	showContextMenu(win.ptr, menus, compoID)
+}
+
 func CreateWindow(ID string, conf WindowConfig) *Window {
 	if !running {
 		iulog.Panic("windows must be created once the app is launched ~> start creating windows in mac.OnLaunch func")

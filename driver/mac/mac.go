@@ -63,41 +63,38 @@ func onQuit() {
 // ============================================================================
 
 func setMenu(menu iu.Menu) {
-	cmenu := C.Menu__{
-		indent:    C.uint(menu.Indent),
-		enabled:   cbool(menu.Enabled),
-		separator: cbool(menu.Separator),
-	}
-
-	cmenu.name = C.CString(menu.Name)
-	defer C.free(unsafe.Pointer(cmenu.name))
-
-	cmenu.shortcut = C.CString(menu.Shortcut)
-	defer C.free(unsafe.Pointer(cmenu.shortcut))
-
-	cmenu.nativeAction = C.CString(menu.NativeAction)
-	defer C.free(unsafe.Pointer(cmenu.nativeAction))
+	cmenu := menuToCMenu(menu)
+	defer freeCMenu(cmenu)
 
 	C.Menu_Set(cmenu)
 }
 
 func setDockMenu(menu iu.Menu) {
+	cmenu := menuToCMenu(menu)
+	defer freeCMenu(cmenu)
+
+	C.Menu_SetDock(cmenu)
+}
+
+func menuToCMenu(menu iu.Menu) C.Menu__ {
 	cmenu := C.Menu__{
 		indent:    C.uint(menu.Indent),
-		enabled:   cbool(menu.Enabled),
+		disabled:  cbool(menu.Disabled),
 		separator: cbool(menu.Separator),
 	}
 
 	cmenu.name = C.CString(menu.Name)
-	defer C.free(unsafe.Pointer(cmenu.name))
-
 	cmenu.shortcut = C.CString(menu.Shortcut)
+	cmenu.handlerName = C.CString(menu.HandlerName)
+
+	return cmenu
+}
+
+func freeCMenu(cmenu C.Menu__) {
+	defer C.free(unsafe.Pointer(cmenu.name))
 	defer C.free(unsafe.Pointer(cmenu.shortcut))
-
-	cmenu.nativeAction = C.CString(menu.NativeAction)
-	defer C.free(unsafe.Pointer(cmenu.nativeAction))
-
-	C.Menu_SetDock(cmenu)
+	defer C.free(unsafe.Pointer(cmenu.handlerName))
+	defer C.free(unsafe.Pointer(cmenu.compoID))
 }
 
 //export onMenuClick
@@ -105,6 +102,12 @@ func onMenuClick(name *C.char) {
 	if h, ok := menuHandler(C.GoString(name)); ok {
 		h()
 	}
+}
+
+//export onContextMenuClick
+func onContextMenuClick(name *C.char, compoID *C.char) {
+	v := iu.ViewFromComponentID(C.GoString(compoID))
+	iu.CallContextMenuHandler(v, C.GoString(name))
 }
 
 // ============================================================================
@@ -171,6 +174,25 @@ func injectComponentInWindow(ptr unsafe.Pointer, ID string, component string) {
 	defer C.free(unsafe.Pointer(ccompo))
 
 	C.Window_InjectComponent(ptr, cID, ccompo)
+}
+
+func showContextMenu(ptr unsafe.Pointer, menus []iu.Menu, compoID string) {
+	var l int
+
+	if l = len(menus); l == 0 {
+		return
+	}
+
+	cmenus := make([]C.Menu__, l)
+
+	for i := 0; i < l; i++ {
+		m := menuToCMenu(menus[i])
+		m.compoID = C.CString(compoID)
+		cmenus[i] = m
+		defer freeCMenu(cmenus[i])
+	}
+
+	C.Window_ShowContextMenu(ptr, unsafe.Pointer(&cmenus[0]), C.int(l))
 }
 
 //export onWindowMinimize

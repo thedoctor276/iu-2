@@ -39,7 +39,7 @@ var (
 {{range .CSS}}
     <link rel="stylesheet" href="{{.}}" />{{end}}
 </head>
-<body>
+<body oncontextmenu="event.preventDefault()">
 {{.MainView.Render}}
 
 <script>
