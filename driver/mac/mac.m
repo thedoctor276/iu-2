@@ -290,14 +290,14 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     webView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.window.contentView addSubview: webView];
     
-    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat: @"|[webView]|"
-                                                                                    options: 0
-                                                                                    metrics: nil
-                                                                                      views: NSDictionaryOfVariableBindings(webView)]];
-    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat: @"V:|[webView]|"
-                                                                                    options: 0
-                                                                                    metrics: nil
-                                                                                      views: NSDictionaryOfVariableBindings(webView)]];
+    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[webView]|"
+                                                                                    options:0
+                                                                                    metrics:nil
+                                                                                      views:NSDictionaryOfVariableBindings(webView)]];
+    [self.window.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[webView]|"
+                                                                                    options:0
+                                                                                    metrics:nil
+                                                                                      views:NSDictionaryOfVariableBindings(webView)]];
     self.webView = webView;
     webView.navigationDelegate = self;
     webView.UIDelegate = self;
@@ -375,6 +375,10 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
                   completionHandler:nil];
     
     completionHandler();
+}
+
+- (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message nitiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL result))completionHandler {
+    
 }
 
 - (void) userContentController:(nonnull WKUserContentController *)userContentController didReceiveScriptMessage:(nonnull WKScriptMessage *)message {
@@ -465,6 +469,16 @@ void Window_ShowContextMenu(void* ptr, const Menu__* menus, int count) {
     [ctxm popUpMenuPositioningItem:ctxm.itemArray[0]
                         atLocation:p
                             inView:windowController.webView];
+}
+
+void Window_Alert(void* ptr, const char* msg) {
+    WindowController* windowController = (__bridge WindowController*)ptr;
+    NSString* message = [NSString stringWithUTF8String:msg];
+    
+    NSAlert* alert = [[NSAlert alloc] init];
+    [alert setMessageText:message];
+    [alert beginSheetModalForWindow:windowController.window
+                  completionHandler:nil];
 }
 
 // ============================================================================

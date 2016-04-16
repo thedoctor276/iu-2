@@ -10,4 +10,6 @@ type Context interface {
 	InjectComponent(component *Component)
 
 	ShowContextMenu(menus []Menu, compoID string)
+
+	Alert(msg string)
 }

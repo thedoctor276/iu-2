@@ -90,6 +90,7 @@ void Window_Close(void* ptr);
 void Window_Navigate(void* ptr, const char* HTML, const char* baseURL);
 void Window_InjectComponent(void* ptr, const char* ID, const char* component);
 void Window_ShowContextMenu(void* ptr, const Menu__* menus, int count);
+void Window_Alert(void* ptr, const char* msg);
 
 // ============================================================================
 // Util

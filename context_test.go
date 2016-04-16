@@ -26,3 +26,7 @@ func (ctx *EmptyContext) Navigate(page *Page) {
 func (ctx *EmptyContext) ShowContextMenu(menus []Menu, compoID string) {
 	iulog.Printf(`ShowContextMenu -> %v`, menus)
 }
+
+func (ctx *EmptyContext) Alert(msg string) {
+	iulog.Printf(`Alert -> %v`, msg)
+}

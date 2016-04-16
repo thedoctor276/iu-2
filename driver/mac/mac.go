@@ -195,6 +195,13 @@ func showContextMenu(ptr unsafe.Pointer, menus []iu.Menu, compoID string) {
 	C.Window_ShowContextMenu(ptr, unsafe.Pointer(&cmenus[0]), C.int(l))
 }
 
+func showWindowAlert(ptr unsafe.Pointer, msg string) {
+	cmsg := C.CString(msg)
+	defer C.free(unsafe.Pointer(cmsg))
+
+	C.Window_Alert(ptr, cmsg)
+}
+
 //export onWindowMinimize
 func onWindowMinimize(ID *C.char) {
 	win, err := WindowByID(C.GoString(ID))
