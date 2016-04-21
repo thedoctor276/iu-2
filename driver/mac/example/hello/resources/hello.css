@@ -2,12 +2,12 @@ html {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: 50% 50%;
-    background-image: url("bg.jpg");
+    /*background-image: url("bg.jpg");*/
 }
 
 body {
     color: white;
-    background-color: rgba(0, 0, 0, 0.1);    
+    /*background-color: rgba(0, 0, 0, 0.1);    */
 }
 
 h1 {

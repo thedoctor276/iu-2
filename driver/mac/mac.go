@@ -322,6 +322,7 @@ func onWindowClose(ID *C.char) C.BOOL {
 	}
 
 	if shouldClose {
+		win.currentPage.Close()
 		delete(windows, id)
 	}
 

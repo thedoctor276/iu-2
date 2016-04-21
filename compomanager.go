@@ -2,6 +2,7 @@ package iu
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/maxence-charriere/iu-log"
 )
@@ -16,6 +17,10 @@ type compoManager struct {
 func (manager *compoManager) Register(v View) (err error) {
 	var c *Component
 	var ok bool
+
+	if val := reflect.Indirect(reflect.ValueOf(v)); val.NumField() == 0 {
+		iulog.Panicf("%v must have at least 1 field", val.Type())
+	}
 
 	if c, ok = manager.components[v]; ok {
 		err = fmt.Errorf("%#v is already registered in compoManager %p", v, manager)

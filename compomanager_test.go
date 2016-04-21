@@ -21,6 +21,16 @@ func TestCompoManagerRegisterExistentView(t *testing.T) {
 	manager.Register(v)
 }
 
+func TestCompoManagerRegisterEmptyView(t *testing.T) {
+	defer func() { recover() }()
+
+	v := &EmptyWorld{}
+
+	manager := newCompoManager()
+	manager.Register(v)
+	t.Error("should have panic")
+}
+
 func TestCompoManagerUnregister(t *testing.T) {
 	v := &Hello{}
 
