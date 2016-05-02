@@ -2,14 +2,15 @@ package iu
 
 import "strconv"
 
-func ToHTMLEntities(line string) string {
-	var converted string
+// HTMLEntities converts all applicable characters to HTML entities
+func HTMLEntities(s string) string {
+	var conv string
 
-	for _, r := range line {
-		converted += runeToHTMLEntity(r)
+	for _, r := range s {
+		conv += runeToHTMLEntity(r)
 	}
 
-	return converted
+	return conv
 }
 
 func runeToHTMLEntity(r rune) string {

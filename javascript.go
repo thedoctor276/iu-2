@@ -1,9 +1,6 @@
 package iu
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
 const (
 	WebkitBridge JSONBridge = "window.webkit.messageHandlers.onCallEventHandler.postMessage(JSON.stringify(msg));"
@@ -11,8 +8,9 @@ const (
 	BlinkBridge             = "alert('Blink as backend is not yet supported');"
 
 	frameworkJSTemplate = `
-function InjectComponent(id, component) {
-    elem = document.getElementById(id);
+function RenderComponent(id, component) {
+    const sel = "[data-iu-id=" + '"' + id + '"]';
+    let elem = document.querySelector(sel);
     elem.outerHTML = component;
 }
 
@@ -123,13 +121,6 @@ func init() {
 }
 
 func SetJSONBridge(bridge JSONBridge) {
-	var rawFrameworkJS string
-
 	jsonBridge = bridge
-	rawFrameworkJS = fmt.Sprintf(frameworkJSTemplate, jsonBridge)
-	frameworkJS = strings.Trim(rawFrameworkJS, " \t\r\n")
-}
-
-func FrameworkJS() string {
-	return frameworkJS
+	frameworkJS = fmt.Sprintf(frameworkJSTemplate, jsonBridge)
 }

@@ -447,10 +447,10 @@ void Window_Navigate(void* ptr, const char* HTML, const char* baseURL) {
                                      baseURL:base];
 }
 
-void Window_InjectComponent(void* ptr, const char* ID, const char* component) {
+void Window_RenderComponent(void* ptr, const char* ID, const char* component) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
-    NSString* call = [NSString stringWithFormat:@"InjectComponent(\"%s\", %s)", ID, component];
+    NSString* call = [NSString stringWithFormat:@"RenderComponent(\"%s\", %s)", ID, component];
     [windowController.webView evaluateJavaScript: call
                                completionHandler: nil];
 }

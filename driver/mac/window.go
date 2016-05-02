@@ -11,7 +11,7 @@ import (
 const (
 	WindowBackgroundSolid WindowBackground = iota
 	WindowBackgroundLight
-	WindowBackgroundMediumLight
+	WindowBackgroundUltraLight
 	WindowBackgroundDark
 	WindowBackgroundUltraDark
 )

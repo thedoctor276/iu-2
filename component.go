@@ -3,95 +3,149 @@ package iu
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"reflect"
+	"strings"
 	"sync"
-	"text/template"
 
 	"github.com/maxence-charriere/iu-log"
 )
 
 var (
-	lastComponentID uint64
-	componentMutex  sync.Mutex
+	currentComponentID ComponentToken
+	componentMtx       sync.Mutex
 )
 
-type Component struct {
-	page     *Page
-	view     View
-	id       string
-	mtx      sync.Mutex
-	template *template.Template
+// Component is the representation of a component.
+type Component interface {
+	// Template returns a string containing the HTML representation of the component.
+	// The string must have a template format compatible with go package text/template.
+	Template() string
 }
 
-func (comp *Component) ID() string {
-	return comp.id
+// MountHandler is the representation of a component which can perform
+// an action when it is mounted.
+type MountHandler interface {
+	// OnMount is the method to be called when the component is mounted.
+	OnMount()
 }
 
-func (comp *Component) Render() string {
-	var buffer bytes.Buffer
-	var err error
+// UnmountHandler is the representation of a component which can
+// perform an action when it is unmounted.
+type UnmountHandler interface {
+	// OnUnmount is the method to be called when the component is unmounted.
+	OnUnmount()
+}
 
-	comp.mtx.Lock()
-	defer comp.mtx.Unlock()
+// ComponentToken is an unique identifier for a component.
+type ComponentToken uint
 
-	viewValue := reflect.Indirect(reflect.ValueOf(comp.view))
-	viewType := viewValue.Type()
-	viewInterfaceType := reflect.TypeOf((*View)(nil)).Elem()
+// ForRangeComponent performs an action on all components in the tree starting by root.
+func ForRangeComponent(root Component, action func(c Component)) {
+	action(root)
 
-	m := newViewMap(comp.ID())
+	v := reflect.ValueOf(root)
+	ct := v.Type()
+	v = reflect.Indirect(v)
+	t := v.Type()
 
-	for i := 0; i < viewType.NumField(); i++ {
-		fieldName := viewType.Field(i).Name
-		fieldType := viewType.Field(i).Type
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
 
-		if fieldType.Implements(viewInterfaceType) {
-			view := viewValue.Field(i).Interface().(View)
-			m[fieldName] = compoM.Component(view)
-		} else if fieldType == reflect.TypeOf((*string)(nil)).Elem() {
-			s := viewValue.Field(i).String()
+		if f.Type.Implements(ct) {
+			c := v.Field(i).Interface().(Component)
+			ForRangeComponent(c, action)
+		}
+	}
+}
+
+// RenderComponent renders a component.
+// Should be called when a component needs to be redrawn.
+func RenderComponent(c Component) {
+	d := DriverByComponent(c)
+	d.RenderComponent(c)
+}
+
+func nextComponentToken() ComponentToken {
+	componentMtx.Lock()
+	defer componentMtx.Unlock()
+
+	currentComponentID++
+	return currentComponentID
+}
+
+type component struct {
+	Driver    Driver
+	Component Component
+	ID        ComponentToken
+	Template  *template.Template
+}
+
+func (c *component) Render() string {
+	var b bytes.Buffer
+
+	v := reflect.ValueOf(c.Component)
+	ct := v.Type()
+	v = reflect.Indirect(v)
+	t := v.Type()
+	m := propertyMap{}
+
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+
+		if f.Type.Implements(ct) {
+			c := v.Field(i).Interface().(Component)
+			m[f.Name] = innerComponent(c)
+		} else if f.Type == reflect.TypeOf((*string)(nil)).Elem() {
+			s := v.Field(i).Interface().(string)
 			s = template.HTMLEscapeString(s)
-			m[fieldName] = ToHTMLEntities(s)
+			m[f.Name] = HTMLEntities(s)
 		} else {
-			m[fieldName] = viewValue.Field(i).Interface()
+			m[f.Name] = v.Field(i).Interface()
 		}
 	}
 
-	if comp.template == nil {
-		if comp.template, err = template.New("").Parse(comp.view.Template()); err != nil {
-			iulog.Panic(err)
-		}
-	}
+	m["ID"] = c.ID
 
-	if err = comp.template.Execute(&buffer, m); err != nil {
+	if err := c.Template.Execute(&b, m); err != nil {
 		iulog.Panic(err)
 	}
 
-	return buffer.String()
+	return b.String()
 }
 
-func (comp *Component) MustBeUsable() {
-	if comp.page == nil {
-		iulog.Panicf(`component for %#v must be embedded in a page ~> use iu.NewPage(mainView View, config PageConfig) *Page`, comp.view)
+func newComponent(c Component, d Driver) *component {
+	r := c.Template()
+
+	if !strings.Contains(r, `data-iu-id="{{.ID}}"`) {
+		r = strings.Replace(r, " ", ` data-iu-id="{{.ID}}" `, 1)
 	}
 
-	if comp.page.Context == nil {
-		iulog.Panicf(`component.page for %#v must have a context ~> use [Context].Navigate(page *Page)`, comp.view)
+	tpl, err := template.New("").Parse(r)
+	if err != nil {
+		iulog.Panic(err)
+	}
+
+	return &component{
+		Driver:    d,
+		Component: c,
+		ID:        nextComponentToken(),
+		Template:  tpl,
 	}
 }
 
-func NewComponent(view View) *Component {
-	component := &Component{
-		view: view,
-		id:   fmt.Sprintf("iu-%v", nextComponentId()),
+type propertyMap map[string]interface{}
+
+func (m propertyMap) RaiseEvent(name string, arg ...string) string {
+	a := "event"
+
+	if len(arg) != 0 {
+		a = arg[0]
 	}
 
-	return component
-}
+	if len(arg) > 1 {
+		iulog.Warn("RaiseEvent(name string, arg ...string)  currently support only 1 arg, the others will be ignored")
+	}
 
-func nextComponentId() uint64 {
-	componentMutex.Lock()
-	defer componentMutex.Unlock()
-
-	lastComponentID++
-	return lastComponentID
+	return fmt.Sprintf("CallEventHandler('%v', '%v', %v)", m["ID"], name, a)
 }

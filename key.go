@@ -110,4 +110,5 @@ const (
 )
 
 type KeyCode uint8
+
 type KeyLocation uint8
