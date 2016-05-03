@@ -3,15 +3,29 @@ package iu
 import "github.com/maxence-charriere/iu-log"
 
 var (
-	innerComponents map[Component]*component
-	components      map[ComponentToken]Component
+	innerComponents = map[Component]*component{}
+	components      = map[ComponentToken]Component{}
 )
+
+// MountHandler is the representation of a component which can perform
+// an action when it is mounted.
+type MountHandler interface {
+	// OnMount is the method to be called when the component is mounted.
+	OnMount()
+}
+
+// DismountHandler is the representation of a component which can
+// perform an action when it is dismounted.
+type DismountHandler interface {
+	// OnDismount is the method to be called when the component is dismounted.
+	OnDismount()
+}
 
 // MountComponent makes a component ready for event handling.
 // This should be used only when creating a component dynamically.
 // eg. in a repeater or a list.
 //
-// Don't forget to call UnmountComponent(c Component) when a manually mounted
+// Don't forget to call DismountComponent(c Component) when a manually mounted
 // component is not required anymore.
 // It will prevent memory leak.
 func MountComponent(c Component, d Driver) {
@@ -37,9 +51,9 @@ func MountComponents(root Component, d Driver) {
 	})
 }
 
-// UnmountComponent unmounts a component.
+// DismountComponent dismounts a component.
 // Should be call only on components mounted with MountComponent(c Component).
-func UnmountComponent(c Component) {
+func DismountComponent(c Component) {
 	ic, ok := innerComponents[c]
 	if !ok {
 		iulog.Warnf("can't dismount component %#v: component not mounted", c)
@@ -49,15 +63,15 @@ func UnmountComponent(c Component) {
 	delete(innerComponents, c)
 	delete(components, ic.ID)
 
-	if uh, ok := c.(UnmountHandler); ok {
-		uh.OnUnmount()
+	if uh, ok := c.(DismountHandler); ok {
+		uh.OnDismount()
 	}
 }
 
-// UnmountComponents unmounts a component and all its sub components.
-func UnmountComponents(root Component) {
+// DismountComponents dismounts a component and all its sub components.
+func DismountComponents(root Component) {
 	ForRangeComponent(root, func(c Component) {
-		UnmountComponent(c)
+		DismountComponent(c)
 	})
 }
 

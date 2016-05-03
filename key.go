@@ -1,5 +1,6 @@
 package iu
 
+// Keyboard keys.
 const (
 	KeyBackspace          KeyCode = 8
 	KeyTab                KeyCode = 9
@@ -102,13 +103,20 @@ const (
 	KeyBackslash          KeyCode = 220
 	KeySquareBracketRight KeyCode = 221
 	KeyQuote              KeyCode = 222
+)
 
+// Keyboard locations.
+const (
 	KeyLocationStandard KeyLocation = iota
 	KeyLocationLeft
 	KeyLocationRight
 	KeyLocationNumpad
 )
 
+// KeyCode represents a system and implementation dependent numerical
+// code identifying the unmodified value of the pressed key.
 type KeyCode uint8
 
+// KeyLocation represents the location of the key on the keyboard or
+// other input device.
 type KeyLocation uint8

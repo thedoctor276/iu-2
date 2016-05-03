@@ -2,7 +2,7 @@ package iu
 
 import (
 	"bytes"
-	"html/template"
+	"text/template"
 
 	"github.com/maxence-charriere/iu-log"
 )
@@ -25,7 +25,7 @@ const (
 
 	pageTpl = `
 <!doctype html>
-<html lang="{{.Lang}}">
+<html lang="{{if .Lang}}{{.Lang}}{{else}}en{{end}}">
 <head>
     <title>{{if .Title}}{{.Title}}{{else}}Golang loves UI :){{end}}</title>
     <meta charset="utf-8" /> 
@@ -59,7 +59,7 @@ const (
 <script>
 {{.FrameworkJS}}
 </script>
-{{range .Config.JS}}
+{{range .JS}}
 <script src="{{.}}"></script>{{end}}
 </body>
 </html>	
@@ -136,10 +136,7 @@ func (d *DriverBase) render() string {
 
 // NewDriverBase create an instance of a DriverBase and mounts all its components.
 func NewDriverBase(root Component, c DriverConfig) *DriverBase {
-	tpl, err := template.New("").Parse(pageTpl)
-	if err != nil {
-		iulog.Panic(err)
-	}
+	tpl := template.Must(template.New("").Parse(pageTpl))
 
 	return &DriverBase{
 		config:          c,

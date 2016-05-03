@@ -3,10 +3,10 @@ package iu
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"reflect"
 	"strings"
 	"sync"
+	"text/template"
 
 	"github.com/maxence-charriere/iu-log"
 )
@@ -23,20 +23,6 @@ type Component interface {
 	Template() string
 }
 
-// MountHandler is the representation of a component which can perform
-// an action when it is mounted.
-type MountHandler interface {
-	// OnMount is the method to be called when the component is mounted.
-	OnMount()
-}
-
-// UnmountHandler is the representation of a component which can
-// perform an action when it is unmounted.
-type UnmountHandler interface {
-	// OnUnmount is the method to be called when the component is unmounted.
-	OnUnmount()
-}
-
 // ComponentToken is an unique identifier for a component.
 type ComponentToken uint
 
@@ -44,8 +30,8 @@ type ComponentToken uint
 func ForRangeComponent(root Component, action func(c Component)) {
 	action(root)
 
+	ct := reflect.TypeOf((*Component)(nil)).Elem()
 	v := reflect.ValueOf(root)
-	ct := v.Type()
 	v = reflect.Indirect(v)
 	t := v.Type()
 
@@ -84,8 +70,8 @@ type component struct {
 func (c *component) Render() string {
 	var b bytes.Buffer
 
+	ct := reflect.TypeOf((*Component)(nil)).Elem()
 	v := reflect.ValueOf(c.Component)
-	ct := v.Type()
 	v = reflect.Indirect(v)
 	t := v.Type()
 	m := propertyMap{}
@@ -115,13 +101,20 @@ func (c *component) Render() string {
 }
 
 func newComponent(c Component, d Driver) *component {
-	r := c.Template()
+	v := reflect.ValueOf(c)
+	v = reflect.Indirect(v)
 
+	if v.NumField() == 0 {
+		iulog.Panicf("a component should have at least 1 field: %#v", c)
+	}
+
+	r := c.Template()
 	if !strings.Contains(r, `data-iu-id="{{.ID}}"`) {
-		r = strings.Replace(r, " ", ` data-iu-id="{{.ID}}" `, 1)
+		r = strings.Replace(r, ">", ` data-iu-id="{{.ID}}">`, 1)
 	}
 
 	tpl, err := template.New("").Parse(r)
+
 	if err != nil {
 		iulog.Panic(err)
 	}

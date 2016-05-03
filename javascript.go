@@ -2,11 +2,14 @@ package iu
 
 import "fmt"
 
+// Javascript bridges.
 const (
-	WebkitBridge JSONBridge = "window.webkit.messageHandlers.onCallEventHandler.postMessage(JSON.stringify(msg));"
-	EdgeBridge              = "alert('Edge as backend is not yet supported');"
-	BlinkBridge             = "alert('Blink as backend is not yet supported');"
+	WebkitBridge JSBridge = "window.webkit.messageHandlers.onCallEventHandler.postMessage(JSON.stringify(msg));"
+	EdgeBridge            = "alert('Edge as backend is not yet supported');"
+	BlinkBridge           = "alert('Blink as backend is not yet supported');"
+)
 
+const (
 	frameworkJSTemplate = `
 function RenderComponent(id, component) {
     const sel = "[data-iu-id=" + '"' + id + '"]';
@@ -111,16 +114,20 @@ function CallEventHandler(id, eventName, arg) {
 
 var (
 	frameworkJS string
-	jsonBridge  = WebkitBridge
+	jsBridge    = WebkitBridge
 )
 
-type JSONBridge string
+// JSBridge represent a javascript snippet to communicate with a web browser.
+// Should be only used in a driver implementation.
+type JSBridge string
 
 func init() {
-	SetJSONBridge(WebkitBridge)
+	SetJSBridge(WebkitBridge)
 }
 
-func SetJSONBridge(bridge JSONBridge) {
-	jsonBridge = bridge
-	frameworkJS = fmt.Sprintf(frameworkJSTemplate, jsonBridge)
+// SetJSBridge set the bridge to use to communicate with a web browser.
+// Should be only used in a driver implementation.
+func SetJSBridge(bridge JSBridge) {
+	jsBridge = bridge
+	frameworkJS = fmt.Sprintf(frameworkJSTemplate, jsBridge)
 }

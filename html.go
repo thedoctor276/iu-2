@@ -2,7 +2,7 @@ package iu
 
 import "strconv"
 
-// HTMLEntities converts all applicable characters to HTML entities
+// HTMLEntities converts all applicable characters to HTML entities.
 func HTMLEntities(s string) string {
 	var conv string
 
