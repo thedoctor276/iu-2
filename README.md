@@ -1,5 +1,5 @@
 # iu
-[![GoDoc](https://godoc.org/github.com/maxence-charriere/iu?status.svg)](https://godoc.org/github.com/maxence-charriere/iu) [![Go Report Card](https://goreportcard.com/badge/github.com/maxence-charriere/iu)](https://goreportcard.com/report/github.com/maxence-charriere/iu)
+[![GoDoc](https://godoc.org/github.com/maxence-charriere/iu?status.svg)](https://godoc.org/github.com/maxence-charriere/iu) [![Go Report Card](https://goreportcard.com/badge/github.com/maxence-charriere/iu)](https://goreportcard.com/report/github.com/maxence-charriere/iu) [![Build Status](https://travis-ci.org/maxence-charriere/iu.svg?branch=master)](https://travis-ci.org/maxence-charriere/iu)
 
 Package to create user interfaces with GO, HTML and CSS.
 
