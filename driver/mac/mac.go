@@ -106,15 +106,19 @@ func onMenuClick(name *C.char) {
 
 //export onContextMenuClick
 func onContextMenuClick(name *C.char, compoID *C.char) {
-	v := iu.ViewFromComponentID(C.GoString(compoID))
-	iu.CallContextMenuHandler(v, C.GoString(name))
+	id := iu.ComponentTokenFromString(C.GoString(compoID))
+	c := iu.ComponentByID(id)
+
+	if cmc, ok := c.(iu.ContextMenuContainer); ok {
+		iu.CallContextMenuHandler(cmc, C.GoString(name))
+	}
 }
 
 // ============================================================================
 // Window
 // ============================================================================
 
-func createWindow(ID string, conf WindowConfig) unsafe.Pointer {
+func createWindow(ID string, conf iu.WindowConfig) unsafe.Pointer {
 	cid := C.CString(ID)
 	defer C.free(unsafe.Pointer(cid))
 
@@ -155,17 +159,17 @@ func closeWindow(ptr unsafe.Pointer) {
 	C.Window_Close(ptr)
 }
 
-func navigateInWindow(ptr unsafe.Pointer, HTML string, baseURL string) {
+func renderWindow(ptr unsafe.Pointer, HTML string, baseURL string) {
 	cHTML := C.CString(HTML)
 	defer C.free(unsafe.Pointer(cHTML))
 
 	cbaseURL := C.CString(baseURL)
 	defer C.free(unsafe.Pointer(cbaseURL))
 
-	C.Window_Navigate(ptr, cHTML, cbaseURL)
+	C.Window_Render(ptr, cHTML, cbaseURL)
 }
 
-func injectComponentInWindow(ptr unsafe.Pointer, ID string, component string) {
+func renderComponentInWindow(ptr unsafe.Pointer, ID string, component string) {
 	cID := C.CString(ID)
 	defer C.free(unsafe.Pointer(cID))
 
@@ -173,10 +177,10 @@ func injectComponentInWindow(ptr unsafe.Pointer, ID string, component string) {
 	ccompo := C.CString(component)
 	defer C.free(unsafe.Pointer(ccompo))
 
-	C.Window_InjectComponent(ptr, cID, ccompo)
+	C.Window_RenderComponent(ptr, cID, ccompo)
 }
 
-func showContextMenu(ptr unsafe.Pointer, menus []iu.Menu, compoID string) {
+func showContextMenu(ptr unsafe.Pointer, compoID string, menus []iu.Menu) {
 	var l int
 
 	if l = len(menus); l == 0 {
@@ -204,142 +208,110 @@ func showWindowAlert(ptr unsafe.Pointer, msg string) {
 
 //export onWindowMinimize
 func onWindowMinimize(ID *C.char) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnMinimize != nil {
-		win.OnMinimize()
+	if w.OnMinimize != nil {
+		w.OnMinimize()
 	}
 }
 
 //export onWindowDeminimize
 func onWindowDeminimize(ID *C.char) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnDeminimize != nil {
-		win.OnDeminimize()
+	if w.OnDeminimize != nil {
+		w.OnDeminimize()
 	}
 }
 
 //export onWindowFullScreen
 func onWindowFullScreen(ID *C.char) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnFullScreen != nil {
-		win.OnFullScreen()
+	if w.OnFullScreen != nil {
+		w.OnFullScreen()
 	}
 }
 
 //export onWindowExitFullScreen
 func onWindowExitFullScreen(ID *C.char) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnExitFullScreen != nil {
-		win.OnExitFullScreen()
+	if w.OnExitFullScreen != nil {
+		w.OnExitFullScreen()
 	}
 }
 
 //export onWindowMove
 func onWindowMove(ID *C.char, x C.CGFloat, y C.CGFloat) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnMove != nil {
-		win.OnMove(float64(x), float64(y))
+	if w.OnMove != nil {
+		w.OnMove(float64(x), float64(y))
 	}
 }
 
 //export onWindowResize
 func onWindowResize(ID *C.char, width C.CGFloat, height C.CGFloat) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnResize != nil {
-		win.OnResize(float64(width), float64(height))
+	if w.OnResize != nil {
+		w.OnResize(float64(width), float64(height))
 	}
 }
 
 //export onWindowFocus
 func onWindowFocus(ID *C.char) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnFocus != nil {
-		win.OnFocus()
+	if w.OnFocus != nil {
+		w.OnFocus()
 	}
 }
 
 //export onWindowBlur
 func onWindowBlur(ID *C.char) {
-	win, err := WindowByID(C.GoString(ID))
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnBlur != nil {
-		win.OnBlur()
+	if w.OnBlur != nil {
+		w.OnBlur()
 	}
 }
 
 //export onWindowClose
 func onWindowClose(ID *C.char) C.BOOL {
-	id := C.GoString(ID)
-	win, err := WindowByID(id)
-
-	if err != nil {
-		iulog.Panic(err)
-	}
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
 
 	shouldClose := true
 
-	if win.OnClose != nil {
-		shouldClose = win.OnClose()
+	if w.OnClose != nil {
+		shouldClose = w.OnClose()
 	}
 
 	if shouldClose {
-		win.currentPage.Close()
-		delete(windows, id)
+		iu.DismountComponents(w.Root())
+		iu.UnregisterDriver(w)
 	}
 
 	return cbool(shouldClose)
-}
-
-//export onWindowNavigate
-func onWindowNavigate(ID *C.char) {
-	win, err := WindowByID(C.GoString(ID))
-
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	if win.OnNavigate != nil {
-		win.OnNavigate()
-	}
 }
 
 //export onCallEventHandler
@@ -355,12 +327,12 @@ func onCallEventHandler(name *C.char, msgJSON *C.char) {
 	}
 
 	if len(msg.ID) == 0 {
-		iulog.Errorf("no ID in %v", msg)
-		return
+		iulog.Panicf("no ID in %v", msg)
 	}
 
-	v := iu.ViewFromComponentID(msg.ID)
-	iu.CallViewEvent(v, msg.Name, msg.Arg)
+	id := iu.ComponentTokenFromString(msg.ID)
+	c := iu.ComponentByID(id)
+	iu.CallComponentEvent(c, msg.Name, msg.Arg)
 }
 
 // ============================================================================
@@ -375,6 +347,6 @@ func cbool(b bool) C.BOOL {
 	return 0
 }
 
-func resourcePath() string {
-	return C.GoString(C.ResourcePath())
+func appResourcesPath() string {
+	return C.GoString(C.ResourcesPath())
 }

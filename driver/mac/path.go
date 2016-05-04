@@ -1,22 +1,20 @@
 package mac
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/maxence-charriere/iu"
+	"github.com/maxence-charriere/iu-log"
 )
 
 var packaged bool
 
 func init() {
-	var path string
-	var err error
-
-	if path, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
-		log.Panic(err)
+	path, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		iulog.Panic(err)
 	}
 
 	for _, dir := range strings.Split(path, "/") {
@@ -26,14 +24,14 @@ func init() {
 		}
 	}
 
-	iu.Path = resPath
+	iu.SetResourcesPath(resourcesPath)
 }
 
-func resPath(elem ...string) string {
-	var resources = "resources"
+func resourcesPath(elem ...string) string {
+	resources := "resources"
 
 	if packaged {
-		resources = resourcePath()
+		resources = appResourcesPath()
 	}
 
 	elem = append([]string{resources}, elem...)

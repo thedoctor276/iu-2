@@ -364,10 +364,6 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     windowController.window.delegate = nil;
 }
 
-- (void) webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation {
-    onWindowNavigate((char*)[self.ID UTF8String]);
-}
-
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WKFrameInfo*)frame completionHandler:(void (^)(void))completionHandler {
     NSAlert* alert = [[NSAlert alloc] init];
     [alert setMessageText:message];
@@ -437,7 +433,7 @@ void Window_Close(void* ptr) {
     [windowController.window performClose:windowController];
 }
 
-void Window_Navigate(void* ptr, const char* HTML, const char* baseURL) {
+void Window_Render(void* ptr, const char* HTML, const char* baseURL) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
     NSString* html = [NSString stringWithUTF8String: HTML];
@@ -447,10 +443,10 @@ void Window_Navigate(void* ptr, const char* HTML, const char* baseURL) {
                                      baseURL:base];
 }
 
-void Window_InjectComponent(void* ptr, const char* ID, const char* component) {
+void Window_RenderComponent(void* ptr, const char* ID, const char* component) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
-    NSString* call = [NSString stringWithFormat:@"InjectComponent(\"%s\", %s)", ID, component];
+    NSString* call = [NSString stringWithFormat:@"RenderComponent(\"%s\", %s)", ID, component];
     [windowController.webView evaluateJavaScript: call
                                completionHandler: nil];
 }
@@ -485,7 +481,7 @@ void Window_Alert(void* ptr, const char* msg) {
 // Util
 // ============================================================================
 
-const char* ResourcePath() {
+const char* ResourcesPath() {
     NSBundle* mainBundle;
     mainBundle = [NSBundle mainBundle];
     return mainBundle.resourcePath.UTF8String;

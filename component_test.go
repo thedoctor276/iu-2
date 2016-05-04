@@ -1,100 +1,179 @@
 package iu
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/maxence-charriere/iu-log"
+)
+
+type Foo struct {
+	Number int
+	Prefix string
+	OnTest func()
+}
+
+func (f *Foo) Template() string {
+	return `<span>{{if .Prefix}}{{.Prefix}}-{{end}}Foo({{.Number}})</span>`
+}
+
+func (f *Foo) OnMount() {
+	iulog.Printf("%p ~> I'm mounted", f)
+}
+
+func (f *Foo) OnDismount() {
+	iulog.Printf("%p ~> I'm dismounted", f)
+}
+
+func (f *Foo) ContextMenu() []Menu {
+	return []Menu{
+		Menu{
+			Name: "Minimize",
+		},
+
+		Menu{
+			Name: "Quit",
+			Handler: func() {
+				iulog.Printf("%p quit")
+			},
+		},
+	}
+}
+
+func (f *Foo) OnClick(e MouseEvent) {
+	iulog.Printf("%p ~> OnClick %v", f, e)
+}
+
+type Bar struct {
+	Foo *Foo
+}
+
+func (b *Bar) Template() string {
+	return `
+<div>
+    {{.Foo.Render}}
+    <span>Bar</span>
+</div>
+`
+}
+
+type EmptyFoo struct {
+}
+
+func (f *EmptyFoo) Template() string {
+	return `<span>I'm an empty foo</span>`
+}
+
+func TestComponentTokenFromString(t *testing.T) {
+	expected := ComponentToken(42)
+
+	if id := ComponentTokenFromString("42"); id != expected {
+		t.Errorf("id should be %v: %v", expected, id)
+	}
+}
+
+func TestComponentTokenFromInvalidString(t *testing.T) {
+	defer func() { recover() }()
+
+	ComponentTokenFromString("4dasf2234-=2")
+	t.Error("should have panic")
+}
+
+func TestForRangeComponent(t *testing.T) {
+	c := &Bar{
+		Foo: &Foo{},
+	}
+
+	ForRangeComponent(c, func(c Component) {
+		t.Logf("%#v", c)
+	})
+}
+
+func TestRenderComponent(t *testing.T) {
+	f := &Foo{}
+	b := &Bar{
+		Foo: f,
+	}
+
+	d := NewDriverTest(b, DriverConfig{})
+	defer d.Close()
+
+	RenderComponent(f)
+}
+
+func TestNextComponent(t *testing.T) {
+	currentComponentID = 0
+	defer func() { currentComponentID = 0 }()
+
+	if id := nextComponentToken(); id != ComponentToken(1) {
+		t.Errorf("id should be 1: %v", id)
+	}
+}
 
 func TestComponentRender(t *testing.T) {
-	hello := &Hello{
-		Greeting: &World{},
+	d := NewDriverTest(&Foo{}, DriverConfig{})
+	defer d.Close()
+
+	c := &Foo{
+		Prefix: "Super",
+		Number: 42,
 	}
 
-	RegisterView(hello)
-	RegisterView(hello.Greeting)
-	defer UnregisterView(hello)
-	defer UnregisterView(hello.Greeting)
+	MountComponent(c, d)
+	defer DismountComponent(c)
 
-	comp := compoM.Component(hello)
-	t.Log(comp.Render())
+	ic := innerComponent(c)
+	t.Log(ic.Render())
 }
 
-func TestComponentRenderInvalidTemplate(t *testing.T) {
-	defer func() { recover() }()
+func TestComponentRenderTree(t *testing.T) {
+	d := NewDriverTest(&Foo{}, DriverConfig{})
+	defer d.Close()
 
-	world := WrongWorld{}
-
-	RegisterView(world)
-	defer UnregisterView(world)
-
-	comp := NewComponent(world)
-	t.Log(comp.Render())
-	t.Error("should have panic")
-}
-
-func TestComponentMustBeUsable(t *testing.T) {
-	v := &Hello{
-		Greeting: &World{},
+	f := &Foo{}
+	b := &Bar{
+		Foo: f,
 	}
 
-	p := NewPage(v, PageConfig{})
-	ctx := &EmptyContext{}
+	MountComponents(b, d)
+	defer DismountComponents(b)
 
-	defer p.Close()
-
-	ctx.Navigate(p)
-	c := compoM.Component(v)
-	c.MustBeUsable()
-}
-
-func TestComponentIsNotUsablePage(t *testing.T) {
-	defer func() { recover() }()
-
-	v := &Hello{
-		Greeting: &World{},
-	}
-
-	RegisterView(v)
-	c := compoM.Component(v)
-	c.MustBeUsable()
-	t.Error("should have panic")
-}
-
-func TestComponentIsNotUsableContext(t *testing.T) {
-	defer func() { recover() }()
-
-	v := &Hello{
-		Greeting: &World{},
-	}
-
-	p := NewPage(v, PageConfig{})
-	defer p.Close()
-
-	c := compoM.Component(v)
-	c.MustBeUsable()
-	t.Error("should have panic")
+	ic := innerComponent(b)
+	t.Log(ic.Render())
 }
 
 func TestNewComponent(t *testing.T) {
-	lastComponentID = 0
-	defer func() { lastComponentID = 0 }()
+	d := NewDriverTest(&Foo{}, DriverConfig{})
+	defer d.Close()
 
-	hello := &Hello{}
-	comp := NewComponent(hello)
-
-	if id := comp.ID(); id != "iu-1" {
-		t.Error("id should be iu-1:", id)
-	}
-
-	if h := comp.view; h != hello {
-		t.Errorf("h should be %v: %v", hello, h)
-	}
+	c := &Foo{}
+	newComponent(c, d)
 }
 
-func TestNextComponentId(t *testing.T) {
-	lastComponentID = 0
-	defer func() { lastComponentID = 0 }()
+func TestNewEmptyComponent(t *testing.T) {
+	defer func() { recover() }()
 
-	nextComponentId()
+	d := NewDriverTest(&Foo{}, DriverConfig{})
+	defer d.Close()
 
-	if lastComponentID != 1 {
-		t.Errorf("lastComponentID should be 1: %v", lastComponentID)
+	c := &EmptyFoo{}
+	newComponent(c, d)
+	t.Error("should have panic")
+}
+
+func TestPropertyMapRaiseEvent(t *testing.T) {
+	m := propertyMap{
+		"ID": ComponentToken(42),
 	}
+
+	js := m.RaiseEvent("Onclick", "event")
+	t.Log(js)
+}
+
+func TestPropertyMapRaiseEventWithMultipleArgs(t *testing.T) {
+	m := propertyMap{
+		"ID": ComponentToken(42),
+	}
+
+	js := m.RaiseEvent("Onclick", "event", "name")
+	t.Log(js)
 }

@@ -1,11 +1,16 @@
 package iu
 
-import (
-	"reflect"
+import "github.com/maxence-charriere/iu-log"
 
-	"github.com/maxence-charriere/iu-log"
-)
+// ContextMenuContainer is the representation of a component that can display a context menu.
+type ContextMenuContainer interface {
+	// ContextMenu returns a slice of menu.
+	ContextMenu() []Menu
 
+	Component
+}
+
+// Menu represents a menu item abstraction.
 type Menu struct {
 	Name          string
 	Shortcut      string
@@ -17,27 +22,22 @@ type Menu struct {
 	Handler       func()
 }
 
-func CallContextMenuHandler(view View, name string) {
-	v := reflect.Indirect(reflect.ValueOf(view))
-	ctxmv := v.FieldByName("ContextMenu")
+// ShowContextMenu shows the context menu of a component.
+func ShowContextMenu(c ContextMenuContainer) {
+	ic := innerComponent(c)
+	ic.Driver.ShowContextMenu(ic.ID, c.ContextMenu())
+}
 
-	if !ctxmv.IsValid() {
-		iulog.Panicf("view %v doesn't have a context menu", v.Type())
-	}
-
-	if mt := reflect.TypeOf((*[]Menu)(nil)).Elem(); ctxmv.Type() != mt {
-		iulog.Panicf("ContextMenu in view %v is not a []iu.Menu", v.Type())
-	}
-
-	ctxm := ctxmv.Interface().([]Menu)
-
-	for _, m := range ctxm {
+// CallContextMenuHandler calls menu handler of a component that implements the ContextMenu interface.
+// This call should be used only in a driver implementation.
+func CallContextMenuHandler(c ContextMenuContainer, name string) {
+	for _, m := range c.ContextMenu() {
 		if m.Name != name {
 			continue
 		}
 
 		if m.Handler == nil {
-			iulog.Warnf(`menu named "%v" in %v doesn't have a handler`, name, v.Type())
+			iulog.Warnf(`menu named "%v" in %#v doesn't have a handler`, name, c)
 			return
 		}
 

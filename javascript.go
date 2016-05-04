@@ -1,23 +1,24 @@
 package iu
 
-import (
-	"fmt"
-	"strings"
+import "fmt"
+
+// Javascript bridges.
+const (
+	WebkitBridge JSBridge = "window.webkit.messageHandlers.onCallEventHandler.postMessage(JSON.stringify(msg));"
+	EdgeBridge            = "alert('Edge as backend is not yet supported');"
+	BlinkBridge           = "alert('Blink as backend is not yet supported');"
 )
 
 const (
-	WebkitBridge JSONBridge = "window.webkit.messageHandlers.onCallEventHandler.postMessage(JSON.stringify(msg));"
-	EdgeBridge              = "alert('Edge as backend is not yet supported');"
-	BlinkBridge             = "alert('Blink as backend is not yet supported');"
-
 	frameworkJSTemplate = `
-function InjectComponent(id, component) {
-    elem = document.getElementById(id);
+function RenderComponent(id, component) {
+    const sel = '[data-iu-id="' + id + '"]';
+    const elem = document.querySelector(sel);
     elem.outerHTML = component;
 }
 
 function MakeMouseEvent(event) {
-    var obj = {
+    const obj = {
         "AltKey": event.altKey,
         "Button": event.button,
         "ClientX": event.clientX,
@@ -36,7 +37,7 @@ function MakeMouseEvent(event) {
 }
 
 function MakeWheelEvent(event) {
-    var obj = {
+    const obj = {
         "DeltaX": event.deltaX,
         "DeltaY": event.deltaY,
         "DeltaZ": event.deltaZ,
@@ -47,7 +48,7 @@ function MakeWheelEvent(event) {
 }
 
 function MakeKeyboardEvent(event) {
-    var obj = {
+    const obj = {
         "AltKey": event.altKey,
         "CtrlKey": event.ctrlKey,
         "CharCode": event.charCode,
@@ -60,9 +61,9 @@ function MakeKeyboardEvent(event) {
     return obj;
 }
 
-function CallEventHandler(id, eventName, arg) {
-    var argType = arg.type;
-    
+function CallEventHandler(id, eventName, arg) {    
+    const argType = arg.type;
+        
     switch (argType) {
         case "click":
         case "contextmenu":
@@ -98,8 +99,8 @@ function CallEventHandler(id, eventName, arg) {
             arg = JSON.stringify(arg);
             break;
     };
-
-    var msg = {
+    
+    const msg = {
         "ID": id,
         "Name": eventName,
         "Arg": arg,
@@ -113,23 +114,20 @@ function CallEventHandler(id, eventName, arg) {
 
 var (
 	frameworkJS string
-	jsonBridge  = WebkitBridge
+	jsBridge    = WebkitBridge
 )
 
-type JSONBridge string
+// JSBridge represent a javascript snippet to communicate with a web browser.
+// Should be only used in a driver implementation.
+type JSBridge string
 
 func init() {
-	SetJSONBridge(WebkitBridge)
+	SetJSBridge(WebkitBridge)
 }
 
-func SetJSONBridge(bridge JSONBridge) {
-	var rawFrameworkJS string
-
-	jsonBridge = bridge
-	rawFrameworkJS = fmt.Sprintf(frameworkJSTemplate, jsonBridge)
-	frameworkJS = strings.Trim(rawFrameworkJS, " \t\r\n")
-}
-
-func FrameworkJS() string {
-	return frameworkJS
+// SetJSBridge set the bridge to use to communicate with a web browser.
+// Should be only used in a driver implementation.
+func SetJSBridge(bridge JSBridge) {
+	jsBridge = bridge
+	frameworkJS = fmt.Sprintf(frameworkJSTemplate, jsBridge)
 }

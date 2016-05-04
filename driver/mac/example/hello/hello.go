@@ -3,40 +3,52 @@ package main
 import (
 	"github.com/maxence-charriere/iu"
 	"github.com/maxence-charriere/iu-log"
+	"github.com/maxence-charriere/iu/driver/mac"
 )
 
 type Hello struct {
-	Greeting    string
-	Input       string
-	ContextMenu []iu.Menu
+	Greeting string
+	Input    string
 }
 
-func (hello *Hello) Template() string {
+func (h *Hello) Template() string {
 	return `
 <div class="content">
-    <div id="{{.ID}}" class="hellobox">
+    <div class="hellobox">
         <h1>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>
         <input type="text" 
                autofocus 
                value="{{if .Greeting}}{{.Greeting}}{{end}}" 
                placeholder="What is your name?" 
-               onchange="{{.OnEvent "OnChange" "value"}}"
-               oncontextmenu="{{.OnEvent "OnContextMenu" ""}}">
+               onchange="{{.RaiseEvent "OnChange" "value"}}"
+               oncontextmenu="{{.RaiseEvent "OnContextMenu"}}">
     </div>
 </div>
     `
 }
 
-func (hello *Hello) OnChange(name string) {
-	hello.Greeting = name
-	iu.SyncView(hello)
+func (h *Hello) ContextMenu() []iu.Menu {
+	return []iu.Menu{
+		iu.Menu{
+			Name:     "Custom button",
+			Shortcut: "meta+k",
+		},
+		iu.Menu{Separator: true},
+		mac.CtxMenuCut,
+		mac.CtxMenuCopy,
+		mac.CtxMenuPaste,
+	}
 }
 
-func (hello *Hello) OnContextMenu() {
-	iulog.Warn("OnContextMenu")
-	iu.ShowContextMenu(hello)
+func (h *Hello) OnChange(name string) {
+	h.Greeting = name
+	iu.RenderComponent(h)
 }
 
-func (hello *Hello) CustomCtx() {
+func (h *Hello) OnContextMenu() {
+	iu.ShowContextMenu(h)
+}
+
+func (h *Hello) CustomCtx() {
 	iulog.Warn("Custom context menu Callback")
 }

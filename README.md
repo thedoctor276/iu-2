@@ -23,29 +23,52 @@ go get -u github.com/maxence-charriere/iu
 ```go
 // hello.go
 type Hello struct {
-	Greeting string
-	Input    string
+	Greeting    string
+	Input       string
 }
 
-func (hello *Hello) Template() string {
+func (h *Hello) Template() string {
 	return `
 <div class="content">
-    <div id="{{.ID}}" class="hellobox">
+    <div class="hellobox">
         <h1>Hello, <span>{{if .Greeting}}{{.Greeting}}{{else}}World{{end}}</span></h1>
         <input type="text" 
                autofocus 
                value="{{if .Greeting}}{{.Greeting}}{{end}}" 
                placeholder="What is your name?" 
-               onchange="{{.OnEvent "OnChange" "value"}}">
+               onchange="{{.RaiseEvent "OnChange" "value"}}"
+               oncontextmenu="{{.RaiseEvent "OnContextMenu"}}">
     </div>
 </div>
     `
 }
 
-func (hello *Hello) OnChange(name string) {
-	hello.Greeting = name
-	iu.SyncView(hello)
+func (h *Hello) ContextMenu() []iu.Menu {
+	return []iu.Menu{
+		iu.Menu{
+			Name:     "Custom button",
+			Shortcut: "meta+k",
+		},
+		iu.Menu{Separator: true},
+		mac.CtxMenuCut,
+		mac.CtxMenuCopy,
+		mac.CtxMenuPaste,
+	}
 }
+
+func (h *Hello) OnChange(name string) {
+	h.Greeting = name
+	iu.RenderComponent(h)
+}
+
+func (h *Hello) OnContextMenu() {
+	iu.ShowContextMenu(h)
+}
+
+func (h *Hello) CustomCtx() {
+	iulog.Warn("Custom context menu Callback")
+}
+
 ```
 
 ### Configure the app
@@ -54,6 +77,10 @@ func (hello *Hello) OnChange(name string) {
 
 func main() {
 	mac.SetMenu(mac.MenuQuit)
+	mac.SetMenu(mac.MenuCut)
+	mac.SetMenu(mac.MenuCopy)
+	mac.SetMenu(mac.MenuPaste)
+	mac.SetMenu(mac.MenuSelectAll)
 	mac.SetMenu(mac.MenuClose)
 
 	mac.OnLaunch = onLaunch
@@ -68,61 +95,48 @@ func onLaunch() {
 }
 
 func onReopen() {
-	win, err := mac.WindowByID("Main")
-
-	if err != nil {
-		win = newMainWindow()
+	d, ok := iu.DriverByID("Main")
+	if !ok {
+		d = newMainWindow()
 	}
 
-	win.Show()
+	d.(*mac.Window).Show()
 }
 
 func newMainWindow() *mac.Window {
-	win := mac.CreateWindow("Main", mac.WindowConfig{
-		Width:      1240,
-		Height:     720,
-		Background: mac.WindowBackgroundDark,
-	})
+	hello := &Hello{}
 
-	p := iu.NewPage(&Hello{}, iu.PageConfig{
+	return mac.NewWindow(hello, iu.DriverConfig{
+		ID:  "Main",
 		CSS: []string{"hello.css"},
+		Window: iu.WindowConfig{
+			Width:      1240,
+			Height:     720,
+			Background: iu.WindowBackgroundDark,
+		},
 	})
-
-	win.Navigate(p)
-	return win
 }
 
 ```
 
 ### Stylize the result
 ```css
-html {
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-    background-image: url("bg.jpg");
-}
-
-body {
-    color: white;
-    background-color: rgba(0, 0, 0, 0.1);    
-}
-
 h1 {
     font-weight: 300;
 }
 
 input {
-    font-size: 11pt;
     border: 0pt;
     border-left: 2pt;
     border-color: lightgrey;
     background-color: transparent;
-    color: white;
     border-style: solid;
     box-shadow: none;
     padding: 5pt;
     outline: none;
+    
+    font-size: 11pt;
+    color: white;    
 }
 
 input:focus {
@@ -131,13 +145,21 @@ input:focus {
 
 .content {
     margin: 0pt;
+    width: 100%;
+    height: 100%;
+    
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-image: url("bg.jpg");
+    
+    color: white;
 }
 
 .hellobox {
     position: absolute;
     top: 50%;
     left: 50%;
-    padding: 50px;
     transform: translate(-50%, -50%);
 }
 ```
