@@ -33,7 +33,7 @@ func (f *Foo) ContextMenu() []Menu {
 		Menu{
 			Name: "Quit",
 			Handler: func() {
-				iulog.Printf("%p quit")
+				iulog.Printf("%p quit", f)
 			},
 		},
 	}

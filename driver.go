@@ -175,7 +175,7 @@ func NewDriverBase(root Component, c DriverConfig) *DriverBase {
 
 // RegisterDriver register a driver by its configuration ID.
 // It makes the driver ready fo event handling.
-// Should be only used in a driver implentation.
+// Should be only used in a driver implementation.
 func RegisterDriver(d Driver) {
 	c := d.Config()
 
