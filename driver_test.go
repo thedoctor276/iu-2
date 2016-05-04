@@ -107,7 +107,7 @@ func TestDriverByID(t *testing.T) {
 	defer d.Close()
 
 	if d2, _ := DriverByID(id); d2 != d {
-		t.Errorf("d2 should be %p: %p", d, d2)
+		t.Errorf("d2 should be %#v: %#v", d, d2)
 	}
 }
 
@@ -121,6 +121,6 @@ func TestDriverByComponent(t *testing.T) {
 	defer d.Close()
 
 	if driver := DriverByComponent(root); driver != d {
-		t.Errorf("driver should be %p: %p", d, driver)
+		t.Errorf("driver should be %#v: %#v", d, driver)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/maxence-charriere/iu-log"
 )
 
-// DispatchToken identifies a callback wihthin a Dispatcher.
+// DispatchToken identifies a callback withthin a Dispatcher.
 type DispatchToken uint
 
 type dispatcher struct {

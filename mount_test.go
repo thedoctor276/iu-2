@@ -41,7 +41,7 @@ func TestComponentByID(t *testing.T) {
 	ic := innerComponent(root)
 
 	if r := ComponentByID(ic.ID); r != root {
-		t.Errorf("r should be %p: %p", root, r)
+		t.Errorf("r should be %#v: %#v", root, r)
 	}
 }
 
@@ -62,7 +62,7 @@ func TestInnerComponent(t *testing.T) {
 	defer d.Close()
 
 	if ic := innerComponent(root); ic.Component != root {
-		t.Errorf("ic.Component should be %p: %p", root, ic.Component)
+		t.Errorf("ic.Component should be %v: %v", root, ic.Component)
 	}
 }
 
