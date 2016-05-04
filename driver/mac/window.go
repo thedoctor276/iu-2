@@ -1,6 +1,7 @@
 package mac
 
 import (
+	"fmt"
 	"unsafe"
 
 	"github.com/maxence-charriere/iu"
@@ -21,7 +22,6 @@ type Window struct {
 	OnFocus          func()
 	OnBlur           func()
 	OnClose          func() bool
-	OnNavigate       func()
 
 	ptr unsafe.Pointer
 	*iu.DriverBase
@@ -44,11 +44,11 @@ func (w *Window) Resize(width float64, height float64) {
 }
 
 func (w *Window) RenderComponent(ID iu.ComponentToken, component string) {
-	renderComponentInWindow(w.ptr, string(ID), component)
+	renderComponentInWindow(w.ptr, fmt.Sprint(ID), component)
 }
 
 func (w *Window) ShowContextMenu(ID iu.ComponentToken, m []iu.Menu) {
-	showContextMenu(w.ptr, string(ID), m)
+	showContextMenu(w.ptr, fmt.Sprint(ID), m)
 }
 
 func (w *Window) Alert(msg string) {

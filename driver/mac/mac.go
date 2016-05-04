@@ -314,17 +314,6 @@ func onWindowClose(ID *C.char) C.BOOL {
 	return cbool(shouldClose)
 }
 
-//export onWindowNavigate
-func onWindowNavigate(ID *C.char) {
-	id := iu.DriverToken(C.GoString(ID))
-	d, _ := iu.DriverByID(id)
-	w := d.(*Window)
-
-	if w.OnNavigate != nil {
-		w.OnNavigate()
-	}
-}
-
 //export onCallEventHandler
 func onCallEventHandler(name *C.char, msgJSON *C.char) {
 	var msg iu.EventMessage

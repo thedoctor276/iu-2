@@ -12,13 +12,13 @@ const (
 const (
 	frameworkJSTemplate = `
 function RenderComponent(id, component) {
-    const sel = "[data-iu-id=" + '"' + id + '"]';
-    let elem = document.querySelector(sel);
+    const sel = '[data-iu-id="' + id + '"]';
+    const elem = document.querySelector(sel);
     elem.outerHTML = component;
 }
 
 function MakeMouseEvent(event) {
-    var obj = {
+    const obj = {
         "AltKey": event.altKey,
         "Button": event.button,
         "ClientX": event.clientX,
@@ -37,7 +37,7 @@ function MakeMouseEvent(event) {
 }
 
 function MakeWheelEvent(event) {
-    var obj = {
+    const obj = {
         "DeltaX": event.deltaX,
         "DeltaY": event.deltaY,
         "DeltaZ": event.deltaZ,
@@ -48,7 +48,7 @@ function MakeWheelEvent(event) {
 }
 
 function MakeKeyboardEvent(event) {
-    var obj = {
+    const obj = {
         "AltKey": event.altKey,
         "CtrlKey": event.ctrlKey,
         "CharCode": event.charCode,
@@ -61,9 +61,9 @@ function MakeKeyboardEvent(event) {
     return obj;
 }
 
-function CallEventHandler(id, eventName, arg) {
-    var argType = arg.type;
-    
+function CallEventHandler(id, eventName, arg) {    
+    const argType = arg.type;
+        
     switch (argType) {
         case "click":
         case "contextmenu":
@@ -99,8 +99,8 @@ function CallEventHandler(id, eventName, arg) {
             arg = JSON.stringify(arg);
             break;
     };
-
-    var msg = {
+    
+    const msg = {
         "ID": id,
         "Name": eventName,
         "Arg": arg,

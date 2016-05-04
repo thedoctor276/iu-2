@@ -3,12 +3,12 @@ package main
 import (
 	"github.com/maxence-charriere/iu"
 	"github.com/maxence-charriere/iu-log"
+	"github.com/maxence-charriere/iu/driver/mac"
 )
 
 type Hello struct {
-	Greeting    string
-	Input       string
-	contextMenu []iu.Menu
+	Greeting string
+	Input    string
 }
 
 func (h *Hello) Template() string {
@@ -28,7 +28,16 @@ func (h *Hello) Template() string {
 }
 
 func (h *Hello) ContextMenu() []iu.Menu {
-	return h.contextMenu
+	return []iu.Menu{
+		iu.Menu{
+			Name:     "Custom button",
+			Shortcut: "meta+k",
+		},
+		iu.Menu{Separator: true},
+		mac.CtxMenuCut,
+		mac.CtxMenuCopy,
+		mac.CtxMenuPaste,
+	}
 }
 
 func (h *Hello) OnChange(name string) {
@@ -37,7 +46,6 @@ func (h *Hello) OnChange(name string) {
 }
 
 func (h *Hello) OnContextMenu() {
-	iulog.Warn("OnContextMenu")
 	iu.ShowContextMenu(h)
 }
 

@@ -27,7 +27,7 @@ const (
 <!doctype html>
 <html lang="{{if .Lang}}{{.Lang}}{{else}}en{{end}}">
 <head>
-    <title>{{.Title}}</title>
+    <title>{{.ID}}</title>
     <meta charset="utf-8" /> 
     
     <style media="all" type="text/css">
@@ -146,8 +146,6 @@ func (d *DriverBase) Render() string {
 		"Root":        innerComponent(d.root),
 		"FrameworkJS": frameworkJS,
 	}
-
-	iulog.Warn("Je vais exec ce putin de template")
 
 	if err := d.template.Execute(&b, m); err != nil {
 		iulog.Panic(err)

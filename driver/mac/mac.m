@@ -364,10 +364,6 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     windowController.window.delegate = nil;
 }
 
-- (void) webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation {
-    onWindowNavigate((char*)[self.ID UTF8String]);
-}
-
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WKFrameInfo*)frame completionHandler:(void (^)(void))completionHandler {
     NSAlert* alert = [[NSAlert alloc] init];
     [alert setMessageText:message];

@@ -34,18 +34,7 @@ func onReopen() {
 }
 
 func newMainWindow() *mac.Window {
-	hello := &Hello{
-		contextMenu: []iu.Menu{
-			iu.Menu{
-				Name:     "Custom button",
-				Shortcut: "meta+k",
-			},
-			iu.Menu{Separator: true},
-			mac.CtxMenuCut,
-			mac.CtxMenuCopy,
-			mac.CtxMenuPaste,
-		},
-	}
+	hello := &Hello{}
 
 	return mac.NewWindow(hello, iu.DriverConfig{
 		ID:  "Main",
