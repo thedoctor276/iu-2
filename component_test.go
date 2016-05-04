@@ -63,6 +63,21 @@ func (f *EmptyFoo) Template() string {
 	return `<span>I'm an empty foo</span>`
 }
 
+func TestComponentTokenFromString(t *testing.T) {
+	expected := ComponentToken(42)
+
+	if id := ComponentTokenFromString("42"); id != expected {
+		t.Errorf("id should be %v: %v", expected, id)
+	}
+}
+
+func TestComponentTokenFromInvalidString(t *testing.T) {
+	defer func() { recover() }()
+
+	ComponentTokenFromString("4dasf2234-=2")
+	t.Error("should have panic")
+}
+
 func TestForRangeComponent(t *testing.T) {
 	c := &Bar{
 		Foo: &Foo{},

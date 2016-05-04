@@ -25,24 +25,17 @@ func onLaunch() {
 }
 
 func onReopen() {
-	win, err := mac.WindowByID("Main")
-
-	if err != nil {
-		win = newMainWindow()
+	d, ok := iu.DriverByID("Main")
+	if !ok {
+		d = newMainWindow()
 	}
 
-	win.Show()
+	d.(*mac.Window).Show()
 }
 
 func newMainWindow() *mac.Window {
-	win := mac.CreateWindow("Main", mac.WindowConfig{
-		Width:      1240,
-		Height:     720,
-		Background: mac.WindowBackgroundDark,
-	})
-
 	hello := &Hello{
-		ContextMenu: []iu.Menu{
+		contextMenu: []iu.Menu{
 			iu.Menu{
 				Name:     "Custom button",
 				Shortcut: "meta+k",
@@ -54,10 +47,13 @@ func newMainWindow() *mac.Window {
 		},
 	}
 
-	p := iu.NewPage(hello, iu.PageConfig{
+	return mac.NewWindow(hello, iu.DriverConfig{
+		ID:  "Main",
 		CSS: []string{"hello.css"},
+		Window: iu.WindowConfig{
+			Width:      1240,
+			Height:     720,
+			Background: iu.WindowBackgroundDark,
+		},
 	})
-
-	win.Navigate(p)
-	return win
 }

@@ -437,7 +437,7 @@ void Window_Close(void* ptr) {
     [windowController.window performClose:windowController];
 }
 
-void Window_Navigate(void* ptr, const char* HTML, const char* baseURL) {
+void Window_Render(void* ptr, const char* HTML, const char* baseURL) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
     NSString* html = [NSString stringWithUTF8String: HTML];
@@ -485,7 +485,7 @@ void Window_Alert(void* ptr, const char* msg) {
 // Util
 // ============================================================================
 
-const char* ResourcePath() {
+const char* ResourcesPath() {
     NSBundle* mainBundle;
     mainBundle = [NSBundle mainBundle];
     return mainBundle.resourcePath.UTF8String;

@@ -5,24 +5,24 @@ import (
 	"testing"
 )
 
-func TestResourcePath(t *testing.T) {
+func TestResourcesPath(t *testing.T) {
 	expected := "resources/test"
 
-	if p := ResourcePath("test"); p != expected {
+	if p := ResourcesPath("test"); p != expected {
 		t.Errorf("p should be %v: %v", expected, p)
 	}
 }
 
-func TestSetResourcePath(t *testing.T) {
+func TestSetResourcesPath(t *testing.T) {
 	f := func(elem ...string) string {
 		elem = append([]string{"rss"}, elem...)
 		return filepath.Join(elem...)
 	}
 
-	SetResourcePath(f)
+	SetResourcesPath(f)
 	expected := "rss"
 
-	if p := ResourcePath(); p != expected {
+	if p := ResourcesPath(); p != expected {
 		t.Errorf("p should be %v: %v", expected, p)
 	}
 }

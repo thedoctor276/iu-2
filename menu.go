@@ -2,8 +2,8 @@ package iu
 
 import "github.com/maxence-charriere/iu-log"
 
-// ContextMenu is the representation of a component that can display a context menu.
-type ContextMenu interface {
+// ContextMenuContainer is the representation of a component that can display a context menu.
+type ContextMenuContainer interface {
 	// ContextMenu returns a slice of menu.
 	ContextMenu() []Menu
 
@@ -23,14 +23,14 @@ type Menu struct {
 }
 
 // ShowContextMenu shows the context menu of a component.
-func ShowContextMenu(c ContextMenu) {
+func ShowContextMenu(c ContextMenuContainer) {
 	ic := innerComponent(c)
 	ic.Driver.ShowContextMenu(ic.ID, c.ContextMenu())
 }
 
 // CallContextMenuHandler calls menu handler of a component that implements the ContextMenu interface.
 // This call should be used only in a driver implementation.
-func CallContextMenuHandler(c ContextMenu, name string) {
+func CallContextMenuHandler(c ContextMenuContainer, name string) {
 	for _, m := range c.ContextMenu() {
 		if m.Name != name {
 			continue

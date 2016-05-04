@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -25,6 +26,17 @@ type Component interface {
 
 // ComponentToken is an unique identifier for a component.
 type ComponentToken uint
+
+// ComponentTokenFromString converts a string to a ComponentToken.
+func ComponentTokenFromString(s string) ComponentToken {
+	id, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		iulog.Panic(err)
+
+	}
+
+	return ComponentToken(id)
+}
 
 // ForRangeComponent performs an action on all components in the tree starting by root.
 func ForRangeComponent(root Component, action func(c Component)) {
@@ -48,8 +60,10 @@ func ForRangeComponent(root Component, action func(c Component)) {
 // RenderComponent renders a component.
 // Should be called when a component needs to be redrawn.
 func RenderComponent(c Component) {
-	d := DriverByComponent(c)
-	d.RenderComponent(c)
+	ic := innerComponent(c)
+	d := ic.Driver
+
+	d.RenderComponent(ic.ID, ic.Render())
 }
 
 func nextComponentToken() ComponentToken {
@@ -78,16 +92,21 @@ func (c *component) Render() string {
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
+		fv := v.Field(i)
+
+		if !fv.CanSet() {
+			continue
+		}
 
 		if f.Type.Implements(ct) {
-			c := v.Field(i).Interface().(Component)
+			c := fv.Interface().(Component)
 			m[f.Name] = innerComponent(c)
 		} else if f.Type == reflect.TypeOf((*string)(nil)).Elem() {
-			s := v.Field(i).Interface().(string)
+			s := fv.Interface().(string)
 			s = template.HTMLEscapeString(s)
 			m[f.Name] = HTMLEntities(s)
 		} else {
-			m[f.Name] = v.Field(i).Interface()
+			m[f.Name] = fv.Interface()
 		}
 	}
 

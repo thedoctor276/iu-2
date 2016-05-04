@@ -1,39 +1,15 @@
 package mac
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/maxence-charriere/iu"
 	"github.com/maxence-charriere/iu-log"
 )
 
-const (
-	WindowBackgroundSolid WindowBackground = iota
-	WindowBackgroundLight
-	WindowBackgroundUltraLight
-	WindowBackgroundDark
-	WindowBackgroundUltraDark
-)
-
 var (
 	windows = map[string]*Window{}
 )
-
-type WindowBackground uint
-
-type WindowConfig struct {
-	X               float64
-	Y               float64
-	Width           float64
-	Height          float64
-	Title           string
-	Background      WindowBackground
-	Borderless      bool
-	DisableResize   bool
-	DisableClose    bool
-	DisableMinimize bool
-}
 
 type Window struct {
 	OnMinimize       func()
@@ -47,80 +23,54 @@ type Window struct {
 	OnClose          func() bool
 	OnNavigate       func()
 
-	currentPage *iu.Page
-	ptr         unsafe.Pointer
+	ptr unsafe.Pointer
+	*iu.DriverBase
 }
 
-func (win *Window) Show() {
-	showWindow(win.ptr)
+func (w *Window) Show() {
+	showWindow(w.ptr)
 }
 
-func (win *Window) Move(x float64, y float64) {
-	moveWindow(win.ptr, x, y)
+func (w *Window) Move(x float64, y float64) {
+	moveWindow(w.ptr, x, y)
 }
 
-func (win *Window) Center() {
-	centerWindow(win.ptr)
+func (w *Window) Center() {
+	centerWindow(w.ptr)
 }
 
-func (win *Window) Resize(width float64, height float64) {
-	resizeWindow(win.ptr, width, height)
+func (w *Window) Resize(width float64, height float64) {
+	resizeWindow(w.ptr, width, height)
 }
 
-func (win *Window) Close() {
-	closeWindow(win.ptr)
+func (w *Window) RenderComponent(ID iu.ComponentToken, component string) {
+	renderComponentInWindow(w.ptr, string(ID), component)
 }
 
-func (win *Window) CurrentPage() *iu.Page {
-	return win.currentPage
+func (w *Window) ShowContextMenu(ID iu.ComponentToken, m []iu.Menu) {
+	showContextMenu(w.ptr, string(ID), m)
 }
 
-func (win *Window) Navigate(page *iu.Page) {
-	if page != win.currentPage && win.currentPage != nil {
-		win.currentPage.Close()
-	}
-
-	win.currentPage = page
-	page.Context = win
-	win.Show()
-	navigateInWindow(win.ptr, page.Render(), iu.Path())
+func (w *Window) Alert(msg string) {
+	showWindowAlert(w.ptr, msg)
 }
 
-func (win *Window) InjectComponent(component *iu.Component) {
-	injectComponentInWindow(win.ptr, component.ID(), component.Render())
+func (w *Window) Close() {
+	closeWindow(w.ptr)
 }
 
-func (win *Window) ShowContextMenu(menus []iu.Menu, compoID string) {
-	showContextMenu(win.ptr, menus, compoID)
-}
-
-func (win *Window) Alert(msg string) {
-	showWindowAlert(win.ptr, msg)
-}
-
-func CreateWindow(ID string, conf WindowConfig) *Window {
+func NewWindow(root iu.Component, c iu.DriverConfig) *Window {
 	if !running {
-		iulog.Panic("windows must be created once the app is launched ~> start creating windows in mac.OnLaunch func")
+		iulog.Panic("windows must be created once the app is launched ~> start creating windows in OnLaunch func")
 	}
 
-	if _, ok := windows[ID]; ok {
-		iulog.Panicf("window with ID %v is already created", ID)
+	w := &Window{
+		ptr:        createWindow(string(c.ID), c.Window),
+		DriverBase: iu.NewDriverBase(root, c),
 	}
 
-	win := &Window{
-		ptr: createWindow(ID, conf),
-	}
-
-	windows[ID] = win
-	return win
-}
-
-func WindowByID(ID string) (window *Window, err error) {
-	var ok bool
-
-	if window, ok = windows[ID]; !ok {
-		err = fmt.Errorf("window with ID %v is not created", ID)
-	}
-
-	return
+	iu.MountComponents(w.Root(), w)
+	iu.RegisterDriver(w)
+	renderWindow(w.ptr, w.Render(), iu.ResourcesPath())
+	return w
 }

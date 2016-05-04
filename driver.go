@@ -27,7 +27,7 @@ const (
 <!doctype html>
 <html lang="{{if .Lang}}{{.Lang}}{{else}}en{{end}}">
 <head>
-    <title>{{if .Title}}{{.Title}}{{else}}Golang loves UI :){{end}}</title>
+    <title>{{.Title}}</title>
     <meta charset="utf-8" /> 
     
     <style media="all" type="text/css">
@@ -66,9 +66,15 @@ const (
 `
 )
 
+var (
+	drivers = map[DriverToken]Driver{}
+)
+
 // Driver is a representation of what handles the rendering of the user interface.
 type Driver interface {
-	RenderComponent(c Component)
+	Config() DriverConfig
+
+	RenderComponent(ID ComponentToken, component string)
 
 	ShowContextMenu(ID ComponentToken, m []Menu)
 
@@ -79,7 +85,7 @@ type Driver interface {
 
 // DriverConfig is the configuration required by a driver.
 type DriverConfig struct {
-	Title  string
+	ID     DriverToken
 	Lang   string
 	CSS    []string
 	JS     []string
@@ -100,6 +106,9 @@ type WindowConfig struct {
 	DisableMinimize bool
 }
 
+// DriverToken is an identifier for a driver.
+type DriverToken string
+
 // WindowBackground set the driver background type.
 type WindowBackground uint
 
@@ -115,17 +124,30 @@ type DriverBase struct {
 	template        *template.Template
 }
 
-func (d *DriverBase) render() string {
+// Config returns the driver configuration.
+func (d *DriverBase) Config() DriverConfig {
+	return d.config
+}
+
+// Root returns the root component.
+func (d *DriverBase) Root() Component {
+	return d.root
+}
+
+// Render renders the whole component tree.
+func (d *DriverBase) Render() string {
 	var b bytes.Buffer
 
 	m := map[string]interface{}{
-		"Title":       d.config.Title,
-		"Lang":        d.config.Lang,
-		"CSS":         d.config.CSS,
-		"JS":          d.config.JS,
+		"ID":          d.Config().ID,
+		"Lang":        d.Config().Lang,
+		"CSS":         d.Config().CSS,
+		"JS":          d.Config().JS,
 		"Root":        innerComponent(d.root),
 		"FrameworkJS": frameworkJS,
 	}
+
+	iulog.Warn("Je vais exec ce putin de template")
 
 	if err := d.template.Execute(&b, m); err != nil {
 		iulog.Panic(err)
@@ -138,13 +160,44 @@ func (d *DriverBase) render() string {
 func NewDriverBase(root Component, c DriverConfig) *DriverBase {
 	tpl := template.Must(template.New("").Parse(pageTpl))
 
-	return &DriverBase{
+	if len(c.ID) == 0 {
+		c.ID = "Main driver"
+	}
+
+	d := &DriverBase{
 		config:          c,
 		innerComponents: map[Component]*component{},
 		components:      map[ComponentToken]Component{},
 		root:            root,
 		template:        tpl,
 	}
+
+	return d
+}
+
+// RegisterDriver register a driver by its configuration ID.
+// It makes the driver ready fo event handling.
+// Should be only used in a driver implentation.
+func RegisterDriver(d Driver) {
+	c := d.Config()
+
+	if d, ok := drivers[c.ID]; ok {
+		iulog.Panicf("a driver with id = %v is already registered: %#v", c.ID, d)
+	}
+
+	drivers[c.ID] = d
+}
+
+// UnregisterDriver unregisters a driver.
+func UnregisterDriver(d Driver) {
+	c := d.Config()
+	delete(drivers, c.ID)
+}
+
+// DriverByID returns a registered driver.
+func DriverByID(ID DriverToken) (d Driver, ok bool) {
+	d, ok = drivers[ID]
+	return
 }
 
 // DriverByComponent returns the driver where a component is mounted.
