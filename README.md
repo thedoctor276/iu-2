@@ -19,7 +19,7 @@ go get -u github.com/maxence-charriere/iu
 ## Getting started
 ![Hello](https://www.dropbox.com/s/kagdq53o2j7ttr0/Screen%20Shot%202016-03-28%20at%2018.11.51.png?raw=1)
 
-### Create a view
+### Create a [component](https://github.com/maxence-charriere/iu/blob/master/component.go)
 ```go
 // hello.go
 type Hello struct {
