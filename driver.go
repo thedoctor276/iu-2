@@ -89,6 +89,7 @@ type DriverConfig struct {
 	Lang   string
 	CSS    []string
 	JS     []string
+	OnLoad func()
 	Window WindowConfig
 }
 

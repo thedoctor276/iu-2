@@ -314,6 +314,17 @@ func onWindowClose(ID *C.char) C.BOOL {
 	return cbool(shouldClose)
 }
 
+//export onWindowLoad
+func onWindowLoad(ID *C.char) {
+	id := iu.DriverToken(C.GoString(ID))
+	d, _ := iu.DriverByID(id)
+	w := d.(*Window)
+
+	if w.Config().OnLoad != nil {
+		w.Config().OnLoad()
+	}
+}
+
 //export onCallEventHandler
 func onCallEventHandler(name *C.char, msgJSON *C.char) {
 	var msg iu.EventMessage

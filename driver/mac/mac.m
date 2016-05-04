@@ -364,6 +364,10 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     windowController.window.delegate = nil;
 }
 
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    onWindowLoad((char*)[self.ID UTF8String]);
+}
+
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WKFrameInfo*)frame completionHandler:(void (^)(void))completionHandler {
     NSAlert* alert = [[NSAlert alloc] init];
     [alert setMessageText:message];
@@ -374,7 +378,6 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
 }
 
 - (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message nitiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL result))completionHandler {
-    
 }
 
 - (void) userContentController:(nonnull WKUserContentController *)userContentController didReceiveScriptMessage:(nonnull WKScriptMessage *)message {
