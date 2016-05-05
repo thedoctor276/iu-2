@@ -44,7 +44,8 @@ func (f *Foo) OnClick(e MouseEvent) {
 }
 
 type Bar struct {
-	Foo *Foo
+	Foo  *Foo
+	Foos []*Foo
 }
 
 func (b *Bar) Template() string {
@@ -52,6 +53,9 @@ func (b *Bar) Template() string {
 <div>
     {{.Foo.Render}}
     <span>Bar</span>
+	{{range .Foos}}
+	{{.Render}}
+	{{end}}
 </div>
 `
 }
@@ -132,6 +136,29 @@ func TestComponentRenderTree(t *testing.T) {
 	f := &Foo{}
 	b := &Bar{
 		Foo: f,
+	}
+
+	MountComponents(b, d)
+	defer DismountComponents(b)
+
+	ic := innerComponent(b)
+	t.Log(ic.Render())
+}
+
+func TestComponentRenderTreeWithSlice(t *testing.T) {
+	d := NewDriverTest(&Foo{}, DriverConfig{})
+	defer d.Close()
+
+	f := &Foo{}
+	foos := []*Foo{
+		&Foo{},
+		&Foo{},
+		&Foo{},
+	}
+
+	b := &Bar{
+		Foo:  f,
+		Foos: foos,
 	}
 
 	MountComponents(b, d)

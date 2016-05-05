@@ -49,10 +49,23 @@ func ForRangeComponent(root Component, action func(c Component)) {
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
+		ft := f.Type
+		fv := v.Field(i)
 
-		if f.Type.Implements(ct) {
-			c := v.Field(i).Interface().(Component)
-			ForRangeComponent(c, action)
+		switch ft.Kind() {
+		case reflect.Array, reflect.Slice:
+			if ft.Elem().Implements(ct) {
+				for i := 0; i < fv.Len(); i++ {
+					c := fv.Index(i).Interface().(Component)
+					ForRangeComponent(c, action)
+				}
+			}
+
+		default:
+			if ft.Implements(ct) {
+				c := fv.Interface().(Component)
+				ForRangeComponent(c, action)
+			}
 		}
 	}
 }
@@ -92,19 +105,29 @@ func (c *component) Render() string {
 
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
+		ft := f.Type
 		fv := v.Field(i)
 
 		if !fv.CanSet() {
 			continue
 		}
 
-		if f.Type.Implements(ct) {
+		if ft.Implements(ct) {
 			c := fv.Interface().(Component)
 			m[f.Name] = innerComponent(c)
-		} else if f.Type == reflect.TypeOf((*string)(nil)).Elem() {
+		} else if ft == reflect.TypeOf((*string)(nil)).Elem() {
 			s := fv.Interface().(string)
 			s = template.HTMLEscapeString(s)
 			m[f.Name] = HTMLEntities(s)
+		} else if k := ft.Kind(); k == reflect.Slice || k == reflect.Array && f.Type.Elem().Implements(ct) {
+			s := make([]*component, fv.Len())
+
+			for i := 0; i < fv.Len(); i++ {
+				c := fv.Index(i).Interface().(Component)
+				s[i] = innerComponent(c)
+			}
+
+			m[f.Name] = s
 		} else {
 			m[f.Name] = fv.Interface()
 		}
