@@ -138,8 +138,8 @@ func TestComponentRenderTree(t *testing.T) {
 		Foo: f,
 	}
 
-	MountComponents(b, d)
-	defer DismountComponents(b)
+	MountComponent(b, d)
+	defer DismountComponent(b)
 
 	ic := innerComponent(b)
 	t.Log(ic.Render())
@@ -161,8 +161,8 @@ func TestComponentRenderTreeWithSlice(t *testing.T) {
 		Foos: foos,
 	}
 
-	MountComponents(b, d)
-	defer DismountComponents(b)
+	MountComponent(b, d)
+	defer DismountComponent(b)
 
 	ic := innerComponent(b)
 	t.Log(ic.Render())

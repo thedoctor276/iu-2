@@ -24,7 +24,7 @@ func (d *DriverTest) Alert(msg string) {
 
 func (d *DriverTest) Close() {
 	iulog.Printf("driver %p is closing", d)
-	DismountComponents(d.root)
+	DismountComponent(d.root)
 	UnregisterDriver(d)
 }
 
@@ -34,7 +34,7 @@ func NewDriverTest(root Component, c DriverConfig) *DriverTest {
 	}
 
 	RegisterDriver(d)
-	MountComponents(root, d)
+	MountComponent(root, d)
 	return d
 }
 

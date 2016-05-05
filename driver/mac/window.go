@@ -69,7 +69,7 @@ func NewWindow(root iu.Component, c iu.DriverConfig) *Window {
 		DriverBase: iu.NewDriverBase(root, c),
 	}
 
-	iu.MountComponents(w.Root(), w)
+	iu.MountComponent(w.Root(), w)
 	iu.RegisterDriver(w)
 	renderWindow(w.ptr, w.Render(), iu.ResourcesPath())
 	return w

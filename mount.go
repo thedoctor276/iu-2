@@ -21,14 +21,22 @@ type DismountHandler interface {
 	OnDismount()
 }
 
-// MountComponent makes a component ready for event handling.
+// MountComponent mounts a component and all its sub components on a driver.
+//
+// Mounting a component make it ready for event handling.
 // This should be used only when creating a component dynamically.
 // eg. in a repeater or a list.
 //
-// Don't forget to call DismountComponent(c Component) when a manually mounted
+// Don't forget to call DismountComponents(c Component) when a manually mounted
 // component is not required anymore.
 // It will prevent memory leak.
-func MountComponent(c Component, d Driver) {
+func MountComponent(root Component, d Driver) {
+	ForRangeComponent(root, func(c Component) {
+		mountComponent(c, d)
+	})
+}
+
+func mountComponent(c Component, d Driver) {
 	ic, ok := innerComponents[c]
 	if ok {
 		iulog.Panicf("component %#v is already mounted", c)
@@ -44,16 +52,15 @@ func MountComponent(c Component, d Driver) {
 	}
 }
 
-// MountComponents mounts a component and all its sub components on a driver.
-func MountComponents(root Component, d Driver) {
+// DismountComponent dismounts a component and all its sub components.
+// Should be call only on components mounted with MountComponent(c Component).
+func DismountComponent(root Component) {
 	ForRangeComponent(root, func(c Component) {
-		MountComponent(c, d)
+		dismountComponent(c)
 	})
 }
 
-// DismountComponent dismounts a component.
-// Should be call only on components mounted with MountComponent(c Component).
-func DismountComponent(c Component) {
+func dismountComponent(c Component) {
 	ic, ok := innerComponents[c]
 	if !ok {
 		iulog.Warnf("can't dismount component %#v: component not mounted", c)
@@ -66,13 +73,6 @@ func DismountComponent(c Component) {
 	if uh, ok := c.(DismountHandler); ok {
 		uh.OnDismount()
 	}
-}
-
-// DismountComponents dismounts a component and all its sub components.
-func DismountComponents(root Component) {
-	ForRangeComponent(root, func(c Component) {
-		DismountComponent(c)
-	})
 }
 
 // ComponentByID returns a component by it's ID.
