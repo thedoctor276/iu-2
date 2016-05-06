@@ -39,33 +39,41 @@ func ComponentTokenFromString(s string) ComponentToken {
 }
 
 // ForRangeComponent performs an action on all components in the tree starting by root.
+//
+// Nodes types:
+// - Component
+// - array
+// - slice
+// - map
 func ForRangeComponent(root Component, action func(c Component)) {
 	action(root)
 
-	ct := reflect.TypeOf((*Component)(nil)).Elem()
 	v := reflect.ValueOf(root)
 	v = reflect.Indirect(v)
 	t := v.Type()
 
 	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
-		ft := f.Type
-		fv := v.Field(i)
+		forRangeComponentValue(v.Field(i), action)
+	}
+}
 
-		switch ft.Kind() {
-		case reflect.Array, reflect.Slice:
-			if ft.Elem().Implements(ct) {
-				for i := 0; i < fv.Len(); i++ {
-					c := fv.Index(i).Interface().(Component)
-					ForRangeComponent(c, action)
-				}
-			}
+func forRangeComponentValue(v reflect.Value, action func(c Component)) {
+	t := v.Type()
 
-		default:
-			if ft.Implements(ct) {
-				c := fv.Interface().(Component)
-				ForRangeComponent(c, action)
-			}
+	switch t.Kind() {
+	case reflect.Array, reflect.Slice:
+		for i := 0; i < v.Len(); i++ {
+			forRangeComponentValue(v.Index(i), action)
+		}
+
+	case reflect.Map:
+		for _, k := range v.MapKeys() {
+			forRangeComponentValue(v.MapIndex(k), action)
+		}
+
+	default:
+		if c, ok := v.Interface().(Component); ok {
+			ForRangeComponent(c, action)
 		}
 	}
 }
@@ -97,40 +105,20 @@ type component struct {
 func (c *component) Render() string {
 	var b bytes.Buffer
 
-	ct := reflect.TypeOf((*Component)(nil)).Elem()
 	v := reflect.ValueOf(c.Component)
 	v = reflect.Indirect(v)
 	t := v.Type()
 	m := propertyMap{}
 
-	for i := 0; i < t.NumField(); i++ {
+	for i := 0; i < v.NumField(); i++ {
 		f := t.Field(i)
-		ft := f.Type
 		fv := v.Field(i)
 
 		if !fv.CanSet() {
 			continue
 		}
 
-		if ft.Implements(ct) {
-			c := fv.Interface().(Component)
-			m[f.Name] = innerComponent(c)
-		} else if ft == reflect.TypeOf((*string)(nil)).Elem() {
-			s := fv.Interface().(string)
-			s = template.HTMLEscapeString(s)
-			m[f.Name] = HTMLEntities(s)
-		} else if k := ft.Kind(); k == reflect.Slice || k == reflect.Array && f.Type.Elem().Implements(ct) {
-			s := make([]*component, fv.Len())
-
-			for i := 0; i < fv.Len(); i++ {
-				c := fv.Index(i).Interface().(Component)
-				s[i] = innerComponent(c)
-			}
-
-			m[f.Name] = s
-		} else {
-			m[f.Name] = fv.Interface()
-		}
+		m[f.Name] = valueForRender(fv)
 	}
 
 	m["ID"] = c.ID
@@ -140,6 +128,46 @@ func (c *component) Render() string {
 	}
 
 	return b.String()
+}
+
+func valueForRender(v reflect.Value) interface{} {
+	switch f := v.Interface().(type) {
+	case Component:
+		return innerComponent(f)
+
+	case string:
+		f = template.HTMLEscapeString(f)
+		return HTMLEntities(f)
+
+	default:
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice:
+			s := make([]interface{}, v.Len())
+
+			for i := 0; i < v.Len(); i++ {
+				s[i] = valueForRender(v.Index(i))
+			}
+
+			return s
+
+		case reflect.Map:
+			t := v.Type()
+			iulog.Warn(t)
+			mt := reflect.MapOf(t.Key(), reflect.TypeOf((*interface{})(nil)).Elem())
+			iulog.Warn("Je panic")
+			mv := reflect.MakeMap(mt)
+
+			for _, k := range v.MapKeys() {
+				val := valueForRender(v.MapIndex(k))
+				mv.SetMapIndex(k, reflect.ValueOf(val))
+			}
+
+			return mv.Interface()
+
+		default:
+			return f
+		}
+	}
 }
 
 func newComponent(c Component, d Driver) *component {

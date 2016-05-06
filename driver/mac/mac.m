@@ -360,8 +360,11 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
 - (void)windowWillClose:(NSNotification *)notification {
     [self.webView.configuration.userContentController removeScriptMessageHandlerForName:@"onCallEventHandler"];
     
+    self.window.delegate = nil;
+    self.webView.navigationDelegate = nil;
+    self.webView.UIDelegate = nil;
+    
     WindowController* windowController = (__bridge_transfer WindowController*)((__bridge void*)self);
-    windowController.window.delegate = nil;
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
