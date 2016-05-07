@@ -59,19 +59,18 @@ func (w *Window) Close() {
 	closeWindow(w.ptr)
 }
 
-func NewWindow(root iu.Component, c iu.DriverConfig) *Window {
+func NewWindow(main iu.Component, c iu.DriverConfig) *Window {
 	if !running {
 		iulog.Panic("windows must be created once the app is launched ~> start creating windows in OnLaunch func")
 	}
 
 	w := &Window{
 		ptr:        createWindow(string(c.ID), c.Window),
-		DriverBase: iu.NewDriverBase(root, c),
+		DriverBase: iu.NewDriverBase(main, c),
 	}
 
-	iu.MountComponent(w.Root(), w)
+	iu.MountComponent(w.Nav(), w)
 	iu.RegisterDriver(w)
-	iulog.Warn(w.Render())
 	renderWindow(w.ptr, w.Render(), iu.ResourcesPath())
 	return w
 }

@@ -34,27 +34,27 @@ const (
         html {
             height: 100%;
             width: 100%;
-            margin: 0pt;
-            background-color: transparent;
+            margin: 0;
         }
         
         body {
             height: 100%;
             width: 100%;
-            margin: 0pt;
+            margin: 0;
             font-family: "Helvetica Neue", "Segoe UI";
-            font-size: 11pt;
-            overflow-x: hidden;
-            overflow-y: hidden;
-            background-color: transparent;
         }
+		
+		#iu-nav {
+			height: 100%;
+            width: 100%;
+		}
     </style>
     
 {{range .CSS}}
     <link rel="stylesheet" href="{{.}}" />{{end}}
 </head>
 <body oncontextmenu="event.preventDefault()">
-{{.Root.Render}}
+{{.Main.Render}}
 
 <script>
 {{.FrameworkJS}}
@@ -73,6 +73,8 @@ var (
 // Driver is a representation of what handles the rendering of the user interface.
 type Driver interface {
 	Config() DriverConfig
+
+	Nav() Navigation
 
 	RenderComponent(ID ComponentToken, component string)
 
@@ -121,7 +123,7 @@ type DriverBase struct {
 	config          DriverConfig
 	innerComponents map[Component]*component
 	components      map[ComponentToken]Component
-	root            Component
+	main            Navigation
 	template        *template.Template
 }
 
@@ -130,9 +132,9 @@ func (d *DriverBase) Config() DriverConfig {
 	return d.config
 }
 
-// Root returns the root component.
-func (d *DriverBase) Root() Component {
-	return d.root
+// Nav returns the Navigation component.
+func (d *DriverBase) Nav() Navigation {
+	return d.main
 }
 
 // Render renders the whole component tree.
@@ -144,7 +146,7 @@ func (d *DriverBase) Render() string {
 		"Lang":        d.Config().Lang,
 		"CSS":         d.Config().CSS,
 		"JS":          d.Config().JS,
-		"Root":        innerComponent(d.root),
+		"Main":        innerComponent(d.main),
 		"FrameworkJS": frameworkJS,
 	}
 
@@ -156,7 +158,7 @@ func (d *DriverBase) Render() string {
 }
 
 // NewDriverBase create an instance of a DriverBase and mounts all its components.
-func NewDriverBase(root Component, c DriverConfig) *DriverBase {
+func NewDriverBase(main Component, c DriverConfig) *DriverBase {
 	tpl := template.Must(template.New("").Parse(pageTpl))
 
 	if len(c.ID) == 0 {
@@ -167,7 +169,7 @@ func NewDriverBase(root Component, c DriverConfig) *DriverBase {
 		config:          c,
 		innerComponents: map[Component]*component{},
 		components:      map[ComponentToken]Component{},
-		root:            root,
+		main:            newNavigation(main),
 		template:        tpl,
 	}
 

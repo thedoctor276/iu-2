@@ -32,7 +32,6 @@ func ComponentTokenFromString(s string) ComponentToken {
 	id, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
 		iulog.Panic(err)
-
 	}
 
 	return ComponentToken(id)
@@ -56,7 +55,6 @@ func ForRangeComponent(root Component, action func(c Component)) {
 		f := v.Field(i)
 
 		if !f.CanSet() {
-			iulog.Warnf("cant set %v", t.Field(i))
 			continue
 		}
 
@@ -159,9 +157,7 @@ func valueForRender(v reflect.Value) interface{} {
 
 		case reflect.Map:
 			t := v.Type()
-			iulog.Warn(t)
 			mt := reflect.MapOf(t.Key(), reflect.TypeOf((*interface{})(nil)).Elem())
-			iulog.Warn("Je panic")
 			mv := reflect.MakeMap(mt)
 
 			for _, k := range v.MapKeys() {

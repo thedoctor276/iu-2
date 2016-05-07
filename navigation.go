@@ -29,7 +29,7 @@ type navigation struct {
 func (n *navigation) Template() string {
 	return `
 <div id="iu-nav">
-    {{.Current.Render}}
+{{.Current.Render}}
 </div>
 `
 }

@@ -307,7 +307,7 @@ func onWindowClose(ID *C.char) C.BOOL {
 	}
 
 	if shouldClose {
-		iu.DismountComponent(w.Root())
+		iu.DismountComponent(w.Nav())
 		iu.UnregisterDriver(w)
 	}
 
