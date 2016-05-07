@@ -53,7 +53,14 @@ func ForRangeComponent(root Component, action func(c Component)) {
 	t := v.Type()
 
 	for i := 0; i < t.NumField(); i++ {
-		forRangeComponentValue(v.Field(i), action)
+		f := v.Field(i)
+
+		if !f.CanSet() {
+			iulog.Warnf("cant set %v", t.Field(i))
+			continue
+		}
+
+		forRangeComponentValue(f, action)
 	}
 }
 

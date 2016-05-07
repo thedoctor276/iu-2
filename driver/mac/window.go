@@ -71,6 +71,7 @@ func NewWindow(root iu.Component, c iu.DriverConfig) *Window {
 
 	iu.MountComponent(w.Root(), w)
 	iu.RegisterDriver(w)
+	iulog.Warn(w.Render())
 	renderWindow(w.ptr, w.Render(), iu.ResourcesPath())
 	return w
 }
