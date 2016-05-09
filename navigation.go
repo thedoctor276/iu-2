@@ -21,7 +21,7 @@ type Navigation interface {
 }
 
 type navigation struct {
-	Current Component
+	current Component
 	history []Component
 	index   int
 }
@@ -29,17 +29,21 @@ type navigation struct {
 func (n *navigation) Template() string {
 	return `
 <div id="iu-nav">
-{{.Current.Render}}
+{{.CurrentComponent.Render}}
 </div>
 `
 }
 
 func (n *navigation) OnDismount() {
-	n.Current = nil
+	n.current = nil
 	n.history = cleanhistory(n.history, 0)
 }
 
 func (n *navigation) CurrentComponent() Component {
+	if len(n.history) == 0 {
+		return nil
+	}
+
 	return n.history[n.index]
 }
 
@@ -47,7 +51,7 @@ func (n *navigation) Go(c Component) {
 	n.history = cleanhistory(n.history, n.index+1)
 	n.history = append(n.history, c)
 	n.index++
-	n.Current = c
+	n.current = c
 
 	d := DriverByComponent(n)
 	MountComponent(c, d)
@@ -65,7 +69,7 @@ func (n *navigation) Back() (err error) {
 	}
 
 	n.index--
-	n.Current = n.CurrentComponent()
+	n.current = n.CurrentComponent()
 	RenderComponent(n)
 	return
 }
@@ -81,14 +85,14 @@ func (n *navigation) Next() (err error) {
 	}
 
 	n.index++
-	n.Current = n.CurrentComponent()
+	n.current = n.CurrentComponent()
 	RenderComponent(n)
 	return
 }
 
 func newNavigation(c Component) *navigation {
 	return &navigation{
-		Current: c,
+		current: c,
 		history: []Component{c},
 	}
 }

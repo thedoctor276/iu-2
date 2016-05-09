@@ -48,17 +48,29 @@ func ForRangeComponent(root Component, action func(c Component)) {
 	action(root)
 
 	v := reflect.ValueOf(root)
-	v = reflect.Indirect(v)
 	t := v.Type()
 
-	for i := 0; i < t.NumField(); i++ {
-		f := v.Field(i)
+	for i := 0; i < v.NumMethod(); i++ {
+		m := v.Method(i)
 
-		if !f.CanSet() {
+		if !isComponentTreeGetter(t.Method(i), m) {
 			continue
 		}
 
-		forRangeComponentValue(f, action)
+		forRangeComponentValue(m.Call(nil)[0], action)
+	}
+
+	v = reflect.Indirect(v)
+	t = v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+
+		if len(f.PkgPath) != 0 {
+			continue
+		}
+
+		forRangeComponentValue(v.Field(i), action)
 	}
 }
 
@@ -81,6 +93,34 @@ func forRangeComponentValue(v reflect.Value, action func(c Component)) {
 			ForRangeComponent(c, action)
 		}
 	}
+}
+
+func isComponentTreeGetter(m reflect.Method, v reflect.Value) bool {
+	if len(m.PkgPath) != 0 {
+		return false
+	}
+
+	t := v.Type()
+
+	if t.NumIn() != 0 {
+		return false
+	}
+
+	if t.NumOut() != 1 {
+		return false
+	}
+
+	switch ot := t.Out(0); ot.Kind() {
+	case reflect.Array, reflect.Slice, reflect.Map:
+		return true
+
+	default:
+		if ct := reflect.TypeOf((*Component)(nil)).Elem(); !ot.Implements(ct) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // RenderComponent renders a component.
@@ -110,20 +150,33 @@ type component struct {
 func (c *component) Render() string {
 	var b bytes.Buffer
 
-	v := reflect.ValueOf(c.Component)
-	v = reflect.Indirect(v)
-	t := v.Type()
 	m := propertyMap{}
 
-	for i := 0; i < v.NumField(); i++ {
-		f := t.Field(i)
-		fv := v.Field(i)
+	v := reflect.ValueOf(c.Component)
+	t := v.Type()
 
-		if !fv.CanSet() {
+	for i := 0; i < v.NumMethod(); i++ {
+		method := t.Method(i)
+		methodv := v.Method(i)
+
+		if !isComponentTreeGetter(method, methodv) {
 			continue
 		}
 
-		m[f.Name] = valueForRender(fv)
+		m[method.Name] = valueForRender(methodv.Call(nil)[0])
+	}
+
+	v = reflect.Indirect(v)
+	t = v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		f := t.Field(i)
+
+		if len(f.PkgPath) != 0 {
+			continue
+		}
+
+		m[f.Name] = valueForRender(v.Field(i))
 	}
 
 	m["ID"] = c.ID

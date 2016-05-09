@@ -57,8 +57,12 @@ func (b *Bar) Template() string {
 	{{range .Foos}}
 	{{.Render}}
 	{{end}}
-</div>
+</div>  
 `
+}
+
+func (b *Bar) unexportedComponent() *Foo {
+	return nil
 }
 
 type EmptyFoo struct {

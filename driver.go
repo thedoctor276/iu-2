@@ -28,7 +28,7 @@ const (
 <html lang="{{if .Lang}}{{.Lang}}{{else}}en{{end}}">
 <head>
     <title>{{.ID}}</title>
-    <meta charset="utf-8" /> 
+    <meta charset="utf-8"> 
     
     <style media="all" type="text/css">
         html {
@@ -51,7 +51,7 @@ const (
     </style>
     
 {{range .CSS}}
-    <link rel="stylesheet" href="{{.}}" />{{end}}
+    <link type="text/css" rel="stylesheet" href="{{.}}" />{{end}}
 </head>
 <body oncontextmenu="event.preventDefault()">
 {{.Main.Render}}

@@ -442,11 +442,13 @@ void Window_Close(void* ptr) {
 void Window_Render(void* ptr, const char* HTML, const char* baseURL) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
-    NSString* html = [NSString stringWithUTF8String: HTML];
+    NSData* html = [NSData dataWithBytes:HTML length:strlen(HTML)];
     NSURL* base = [NSURL fileURLWithPath:[NSString stringWithUTF8String: baseURL]];
     
-    [windowController.webView loadHTMLString:html
-                                     baseURL:base];
+    [windowController.webView loadData:html
+                              MIMEType:@"text/html"
+                 characterEncodingName:@"UTF-8"
+                               baseURL:base];
 }
 
 void Window_RenderComponent(void* ptr, const char* ID, const char* component) {
