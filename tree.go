@@ -18,7 +18,7 @@ func ForRangeComponent(root Component, action func(c Component)) {
 	for i := 0; i < v.NumMethod(); i++ {
 		m := v.Method(i)
 
-		if !isComponentTreeGetter(t.Method(i), m) {
+		if !isComponentNodeGetter(t.Method(i), m) {
 			continue
 		}
 
@@ -39,7 +39,7 @@ func ForRangeComponent(root Component, action func(c Component)) {
 	}
 }
 
-func isComponentTreeGetter(m reflect.Method, v reflect.Value) bool {
+func isComponentNodeGetter(m reflect.Method, v reflect.Value) bool {
 	if len(m.PkgPath) != 0 {
 		return false
 	}

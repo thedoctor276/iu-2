@@ -51,7 +51,7 @@ func (c *component) Render() string {
 		method := t.Method(i)
 		methodv := v.Method(i)
 
-		if !isComponentTreeGetter(method, methodv) {
+		if !isComponentNodeGetter(method, methodv) {
 			continue
 		}
 
