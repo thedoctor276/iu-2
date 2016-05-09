@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -24,105 +23,6 @@ type Component interface {
 	Template() string
 }
 
-// ComponentToken is an unique identifier for a component.
-type ComponentToken uint
-
-// ComponentTokenFromString converts a string to a ComponentToken.
-func ComponentTokenFromString(s string) ComponentToken {
-	id, err := strconv.ParseUint(s, 10, 64)
-	if err != nil {
-		iulog.Panic(err)
-	}
-
-	return ComponentToken(id)
-}
-
-// ForRangeComponent performs an action on all components in the tree starting by root.
-//
-// Nodes types:
-// - Component
-// - array
-// - slice
-// - map
-func ForRangeComponent(root Component, action func(c Component)) {
-	action(root)
-
-	v := reflect.ValueOf(root)
-	t := v.Type()
-
-	for i := 0; i < v.NumMethod(); i++ {
-		m := v.Method(i)
-
-		if !isComponentTreeGetter(t.Method(i), m) {
-			continue
-		}
-
-		forRangeComponentValue(m.Call(nil)[0], action)
-	}
-
-	v = reflect.Indirect(v)
-	t = v.Type()
-
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
-
-		if len(f.PkgPath) != 0 {
-			continue
-		}
-
-		forRangeComponentValue(v.Field(i), action)
-	}
-}
-
-func forRangeComponentValue(v reflect.Value, action func(c Component)) {
-	t := v.Type()
-
-	switch t.Kind() {
-	case reflect.Array, reflect.Slice:
-		for i := 0; i < v.Len(); i++ {
-			forRangeComponentValue(v.Index(i), action)
-		}
-
-	case reflect.Map:
-		for _, k := range v.MapKeys() {
-			forRangeComponentValue(v.MapIndex(k), action)
-		}
-
-	default:
-		if c, ok := v.Interface().(Component); ok {
-			ForRangeComponent(c, action)
-		}
-	}
-}
-
-func isComponentTreeGetter(m reflect.Method, v reflect.Value) bool {
-	if len(m.PkgPath) != 0 {
-		return false
-	}
-
-	t := v.Type()
-
-	if t.NumIn() != 0 {
-		return false
-	}
-
-	if t.NumOut() != 1 {
-		return false
-	}
-
-	switch ot := t.Out(0); ot.Kind() {
-	case reflect.Array, reflect.Slice, reflect.Map:
-		return true
-
-	default:
-		if ct := reflect.TypeOf((*Component)(nil)).Elem(); !ot.Implements(ct) {
-			return false
-		}
-	}
-
-	return true
-}
-
 // RenderComponent renders a component.
 // Should be called when a component needs to be redrawn.
 func RenderComponent(c Component) {
@@ -130,14 +30,6 @@ func RenderComponent(c Component) {
 	d := ic.Driver
 
 	d.RenderComponent(ic.ID, ic.Render())
-}
-
-func nextComponentToken() ComponentToken {
-	componentMtx.Lock()
-	defer componentMtx.Unlock()
-
-	currentComponentID++
-	return currentComponentID
 }
 
 type component struct {

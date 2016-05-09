@@ -6,6 +6,10 @@ import (
 	"github.com/maxence-charriere/iu-log"
 )
 
+// ============================================================================
+// Foo
+// ============================================================================
+
 type Foo struct {
 	Number int
 	Prefix string
@@ -43,6 +47,10 @@ func (f *Foo) OnClick(e MouseEvent) {
 	iulog.Printf("%p ~> OnClick %v", f, e)
 }
 
+// ============================================================================
+// Bar
+// ============================================================================
+
 type Bar struct {
 	Foo  *Foo
 	Foos []*Foo
@@ -72,30 +80,9 @@ func (f *EmptyFoo) Template() string {
 	return `<span>I'm an empty foo</span>`
 }
 
-func TestComponentTokenFromString(t *testing.T) {
-	expected := ComponentToken(42)
-
-	if id := ComponentTokenFromString("42"); id != expected {
-		t.Errorf("id should be %v: %v", expected, id)
-	}
-}
-
-func TestComponentTokenFromInvalidString(t *testing.T) {
-	defer func() { recover() }()
-
-	ComponentTokenFromString("4dasf2234-=2")
-	t.Error("should have panic")
-}
-
-func TestForRangeComponent(t *testing.T) {
-	c := &Bar{
-		Foo: &Foo{},
-	}
-
-	ForRangeComponent(c, func(c Component) {
-		t.Logf("%#v", c)
-	})
-}
+// ============================================================================
+// Tests
+// ============================================================================
 
 func TestRenderComponent(t *testing.T) {
 	f := &Foo{}
@@ -107,15 +94,6 @@ func TestRenderComponent(t *testing.T) {
 	defer d.Close()
 
 	RenderComponent(f)
-}
-
-func TestNextComponent(t *testing.T) {
-	currentComponentID = 0
-	defer func() { currentComponentID = 0 }()
-
-	if id := nextComponentToken(); id != ComponentToken(1) {
-		t.Errorf("id should be 1: %v", id)
-	}
 }
 
 func TestComponentRender(t *testing.T) {

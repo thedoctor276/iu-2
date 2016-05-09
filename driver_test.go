@@ -6,6 +6,10 @@ import (
 	"github.com/maxence-charriere/iu-log"
 )
 
+// ============================================================================
+// DriverTest
+// ============================================================================
+
 type DriverTest struct {
 	*DriverBase
 }
@@ -37,6 +41,10 @@ func NewDriverTest(root Component, c DriverConfig) *DriverTest {
 	MountComponent(d.Nav(), d)
 	return d
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
 
 func TestDriverBaseRender(t *testing.T) {
 	root := &Bar{
