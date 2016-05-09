@@ -20,6 +20,11 @@ type Navigation interface {
 	Next() error
 }
 
+func (n *navigation) OnDismount() {
+	n.current = nil
+	n.history = cleanhistory(n.history, 0)
+}
+
 type navigation struct {
 	current Component
 	history []Component
@@ -32,11 +37,6 @@ func (n *navigation) Template() string {
 {{.CurrentComponent.Render}}
 </div>
 `
-}
-
-func (n *navigation) OnDismount() {
-	n.current = nil
-	n.history = cleanhistory(n.history, 0)
 }
 
 func (n *navigation) CurrentComponent() Component {
