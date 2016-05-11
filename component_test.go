@@ -81,6 +81,34 @@ func (f *EmptyFoo) Template() string {
 }
 
 // ============================================================================
+// InvalidFoo
+// ============================================================================
+
+type InvalidFoo struct {
+	Number int
+}
+
+func (f *InvalidFoo) Template() string {
+	return `
+<div>{{.SexyFoo% }}</div>
+`
+}
+
+// ============================================================================
+// InvalidBar
+// ============================================================================
+
+type InvalidBar struct {
+	Slice []int
+}
+
+func (f *InvalidBar) Template() string {
+	return `
+<div>{{index .Slice 42}}</div>
+`
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -174,6 +202,18 @@ func TestComponentRenderTreeWithMap(t *testing.T) {
 	t.Log(ic.Render())
 }
 
+func TestComponentRenderInvalidField(t *testing.T) {
+	defer func() { recover() }()
+
+	c := &InvalidBar{}
+
+	d := NewDriverTest(c, DriverConfig{})
+	defer d.Close()
+
+	RenderComponent(c)
+	t.Error("should have panic")
+}
+
 func TestNewComponent(t *testing.T) {
 	d := NewDriverTest(&Foo{}, DriverConfig{})
 	defer d.Close()
@@ -182,13 +222,24 @@ func TestNewComponent(t *testing.T) {
 	newComponent(c, d)
 }
 
-func TestNewEmptyComponent(t *testing.T) {
+func TestNewComponentEmpty(t *testing.T) {
 	defer func() { recover() }()
 
 	d := NewDriverTest(&Foo{}, DriverConfig{})
 	defer d.Close()
 
 	c := &EmptyFoo{}
+	newComponent(c, d)
+	t.Error("should have panic")
+}
+
+func TestNewComponentInvalidTemplate(t *testing.T) {
+	defer func() { recover() }()
+
+	d := NewDriverTest(&Foo{}, DriverConfig{})
+	defer d.Close()
+
+	c := &InvalidFoo{}
 	newComponent(c, d)
 	t.Error("should have panic")
 }

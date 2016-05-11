@@ -36,7 +36,7 @@ func NewDriverTest(root Component, c DriverConfig) *DriverTest {
 		DriverBase: NewDriverBase(root, c),
 	}
 
-	RegisterDriver(d)
 	MountComponent(d.Nav(), d)
+	RegisterDriver(d)
 	return d
 }

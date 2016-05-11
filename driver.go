@@ -105,10 +105,7 @@ func (d *DriverBase) Render() string {
 		"FrameworkJS": frameworkJS,
 	}
 
-	if err := d.template.Execute(&b, m); err != nil {
-		iulog.Panic(err)
-	}
-
+	d.template.Execute(&b, m)
 	return b.String()
 }
 
