@@ -2,9 +2,10 @@ package mac
 
 import "github.com/maxence-charriere/iu"
 
-var (
-	menuHandlers = map[string]func(){}
+var menuHandlers = map[string]func(){}
 
+// Default mac app menus.
+var (
 	MenuAbout = iu.Menu{
 		Name:          "About",
 		HandlerName:   "orderFrontStandardAboutPanel:",
