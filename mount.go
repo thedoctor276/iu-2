@@ -39,7 +39,7 @@ func MountComponent(root Component, d Driver) {
 func mountComponent(c Component, d Driver) {
 	ic, ok := innerComponents[c]
 	if ok {
-		iulog.Panicf("component %#v is already mounted", c)
+		iulog.Panicf("component %T is already mounted", c)
 		return
 	}
 
@@ -63,7 +63,7 @@ func DismountComponent(root Component) {
 func dismountComponent(c Component) {
 	ic, ok := innerComponents[c]
 	if !ok {
-		iulog.Warnf("can't dismount component %#v: component not mounted", c)
+		iulog.Warnf("can't dismount component %T: component not mounted", c)
 		return
 	}
 
@@ -89,7 +89,7 @@ func ComponentByID(ID ComponentToken) Component {
 func innerComponent(c Component) *component {
 	ic, ok := innerComponents[c]
 	if !ok {
-		iulog.Panicf("component %#v isn't mounted", c)
+		iulog.Panicf("component %T isn't mounted", c)
 	}
 
 	return ic

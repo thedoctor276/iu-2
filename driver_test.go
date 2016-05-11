@@ -1,50 +1,6 @@
 package iu
 
-import (
-	"testing"
-
-	"github.com/maxence-charriere/iu-log"
-)
-
-// ============================================================================
-// DriverTest
-// ============================================================================
-
-type DriverTest struct {
-	*DriverBase
-}
-
-func (d *DriverTest) RenderComponent(ID ComponentToken, component string) {
-	iulog.Printf("rendering %v: %v", ID, component)
-}
-
-func (d *DriverTest) ShowContextMenu(ID ComponentToken, m []Menu) {
-	iulog.Printf("showing %#v for %v", m, ID)
-}
-
-func (d *DriverTest) Alert(msg string) {
-	iulog.Printf("alert %v", msg)
-}
-
-func (d *DriverTest) Close() {
-	iulog.Printf("driver %p is closing", d)
-	DismountComponent(d.main)
-	UnregisterDriver(d)
-}
-
-func NewDriverTest(root Component, c DriverConfig) *DriverTest {
-	d := &DriverTest{
-		DriverBase: NewDriverBase(root, c),
-	}
-
-	RegisterDriver(d)
-	MountComponent(d.Nav(), d)
-	return d
-}
-
-// ============================================================================
-// Tests
-// ============================================================================
+import "testing"
 
 func TestDriverBaseRender(t *testing.T) {
 	root := &Bar{
