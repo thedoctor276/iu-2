@@ -2,11 +2,6 @@ package kit
 
 import "github.com/maxence-charriere/iu"
 
-// DataContextComponent represents a component which have a data context.
-type DataContextComponent interface {
-	iu.Component
-
-	DataContext() interface{}
-
-	SetDataContext(ctx interface{}) d
-}
+// DataMapper represents a handler to determine which component will be created for each source element.
+// The handler should create and initialize the component it returns.
+type DataMapper func(d interface{}) iu.Component
