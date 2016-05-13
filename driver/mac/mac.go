@@ -4,7 +4,7 @@ package mac
 
 /*
 #cgo CFLAGS: -x objective-c -fobjc-arc
-#cgo LDFLAGS: -framework Cocoa -framework WebKit
+#cgo LDFLAGS: -framework Cocoa -framework WebKit -framework CoreImage
 #include "mac.h"
 */
 import "C"
@@ -122,19 +122,25 @@ func createWindow(ID string, conf iu.WindowConfig) unsafe.Pointer {
 	cid := C.CString(ID)
 	defer C.free(unsafe.Pointer(cid))
 
+	ctitle := C.CString(conf.Title)
+	defer C.free(unsafe.Pointer(ctitle))
+
+	cbackgroundColor := C.CString(conf.BackgroundColor)
+	defer C.free(unsafe.Pointer(cbackgroundColor))
+
 	cconf := C.WindowConfig__{
 		x:               C.CGFloat(conf.X),
 		y:               C.CGFloat(conf.Y),
 		width:           C.CGFloat(conf.Width),
 		height:          C.CGFloat(conf.Height),
-		title:           C.CString(conf.Title),
-		background:      C.uint(conf.Background),
+		title:           ctitle,
+		backgroundColor: cbackgroundColor,
+		backgroundType:  C.uint(conf.BackgroundType),
 		borderless:      cbool(conf.Borderless),
 		disableResize:   cbool(conf.DisableResize),
 		disableClose:    cbool(conf.DisableClose),
 		disableMinimize: cbool(conf.DisableMinimize),
 	}
-	defer C.free(unsafe.Pointer(cconf.title))
 
 	return unsafe.Pointer(C.Window_Create(cid, cconf))
 }
