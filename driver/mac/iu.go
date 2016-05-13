@@ -1,3 +1,4 @@
+// Package mac is the mac OSX driver for iu framework.
 package mac
 
 import "github.com/maxence-charriere/iu"
