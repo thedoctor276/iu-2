@@ -234,10 +234,20 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     
     NSVisualEffectView* visualEffectView = nil;
     
-    if (conf.background != 0) {
+    if (conf.backgroundType == 0) {
+        CIColor* c = [CIColor colorWithHexString:@"#f5f5f5"];        
+        NSString* bgcolor = [NSString stringWithUTF8String:conf.backgroundColor];
+        
+        if (bgcolor.length != 0) {
+            c = [CIColor colorWithHexString:bgcolor]; 
+        }
+        
+        window.backgroundColor = [NSColor colorWithCIColor:c];
+        
+    } else {
         visualEffectView = [[NSVisualEffectView alloc] initWithFrame: contentRect];
         
-        switch (conf.background) {
+        switch (conf.backgroundType) {
             case 2:
                 visualEffectView.material = NSVisualEffectMaterialMediumLight;
                 break;
@@ -371,17 +381,28 @@ void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {
     onWindowLoad((char*)[self.ID UTF8String]);
 }
 
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+                                                     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    if (navigationAction.navigationType == WKNavigationTypeReload || navigationAction.navigationType == WKNavigationTypeOther) {
+        decisionHandler(WKNavigationActionPolicyAllow);
+        return;
+    }
+    
+    NSURL* url = navigationAction.request.URL;
+    [[NSWorkspace sharedWorkspace] openURL:url];
+    decisionHandler(WKNavigationActionPolicyCancel);
+}
+
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString*)message initiatedByFrame:(WKFrameInfo*)frame completionHandler:(void (^)(void))completionHandler {
     NSAlert* alert = [[NSAlert alloc] init];
     [alert setMessageText:message];
     [alert beginSheetModalForWindow:self.window
                   completionHandler:nil];
     
+    
     completionHandler();
 }
 
-- (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message nitiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL result))completionHandler {
-}
 
 - (void) userContentController:(nonnull WKUserContentController *)userContentController didReceiveScriptMessage:(nonnull WKScriptMessage *)message {
     if ([message.name  isEqual: @"onCallEventHandler"]) {
@@ -484,6 +505,29 @@ void Window_Alert(void* ptr, const char* msg) {
     [alert beginSheetModalForWindow:windowController.window
                   completionHandler:nil];
 }
+
+// ============================================================================
+// Color
+// ============================================================================
+
+@implementation CIColor(MBCategory)
++ (CIColor*)colorWithHexString:(NSString*)str {
+    const char *cstr = [str cStringUsingEncoding:NSASCIIStringEncoding];
+    long x = strtol(cstr+1, NULL, 16);
+    return [CIColor colorWithHex:x];
+}
+
++ (CIColor*)colorWithHex:(UInt32)col {
+    unsigned char b = col & 0xFF;;
+    unsigned char g = (col >> 8) & 0xFF;
+    unsigned char r = (col >> 16) & 0xFF;
+
+    return [CIColor colorWithRed:(float)r/255.0f 
+                           green:(float)g/255.0f 
+                            blue:(float)b/255.0f 
+                           alpha:1];
+}
+@end
 
 // ============================================================================
 // Util

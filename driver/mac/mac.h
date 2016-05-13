@@ -62,7 +62,8 @@ typedef struct WindowConfig__ {
     CGFloat width;
     CGFloat height;
     const char* title;
-    unsigned int background;
+    const char* backgroundColor;
+    unsigned int backgroundType;
     BOOL borderless;
     BOOL disableResize;
     BOOL disableClose;
@@ -91,6 +92,16 @@ void Window_Render(void* ptr, const char* HTML, const char* baseURL);
 void Window_RenderComponent(void* ptr, const char* ID, const char* component);
 void Window_ShowContextMenu(void* ptr, const Menu__* menus, int count);
 void Window_Alert(void* ptr, const char* msg);
+
+
+// ============================================================================
+// Color
+// ============================================================================
+
+@interface CIColor(MBCategory) 
++ (CIColor*)colorWithHex:(UInt32)col;
++ (CIColor*)colorWithHexString:(NSString*)str;
+@end
 
 // ============================================================================
 // Util
