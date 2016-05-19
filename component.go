@@ -23,6 +23,12 @@ type Component interface {
 	Template() string
 }
 
+// RenderHandler is the representation of a component which can perform
+// an action when it is rendered.
+type RenderHandler interface {
+	OnRender()
+}
+
 // RenderComponent renders a component.
 // Should be called when a component needs to be redrawn.
 func RenderComponent(c Component) {
@@ -30,6 +36,12 @@ func RenderComponent(c Component) {
 	d := ic.Driver
 
 	d.RenderComponent(ic.ID, ic.Render())
+
+	ForRangeComponent(c, func(c Component) {
+		if rh, ok := c.(RenderHandler); ok {
+			rh.OnRender()
+		}
+	})
 }
 
 type component struct {

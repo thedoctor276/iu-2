@@ -65,6 +65,8 @@ type Driver interface {
 
 	ShowContextMenu(ID ComponentToken, m []Menu)
 
+	CallJavascript(call string)
+
 	Alert(msg string)
 
 	Close()

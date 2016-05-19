@@ -40,9 +40,8 @@ func newMainWindow() *mac.Window {
 		ID:  "Main",
 		CSS: []string{"hello.css"},
 		Window: iu.WindowConfig{
-			Width:      1240,
-			Height:     720,
-			Background: iu.WindowBackgroundDark,
+			Width:  1240,
+			Height: 720,
 		},
 	})
 }

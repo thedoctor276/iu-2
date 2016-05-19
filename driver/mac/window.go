@@ -2,6 +2,7 @@ package mac
 
 import (
 	"fmt"
+	"strconv"
 	"unsafe"
 
 	"github.com/maxence-charriere/iu"
@@ -50,12 +51,20 @@ func (w *Window) Resize(width float64, height float64) {
 
 // RenderComponent renders a component.
 func (w *Window) RenderComponent(ID iu.ComponentToken, component string) {
-	renderComponentInWindow(w.ptr, fmt.Sprint(ID), component)
+	component = strconv.Quote(component)
+	call := fmt.Sprintf(`RenderComponent("%v", %v)`, ID, component)
+
+	w.CallJavascript(call)
 }
 
 // ShowContextMenu shows a context menu.
 func (w *Window) ShowContextMenu(ID iu.ComponentToken, m []iu.Menu) {
 	showContextMenu(w.ptr, fmt.Sprint(ID), m)
+}
+
+// CallJavascript calls a javascript function.
+func (w *Window) CallJavascript(call string) {
+	callJavascriptInWindow(w.ptr, call)
 }
 
 // Alert prompts a message.

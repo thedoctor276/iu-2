@@ -24,6 +24,10 @@ func (f *Foo) OnMount() {
 	iulog.Printf("%p ~> I'm mounted", f)
 }
 
+func (f *Foo) OnRender() {
+	iulog.Printf("%p ~> Just rendered", f)
+}
+
 func (f *Foo) OnDismount() {
 	iulog.Printf("%p ~> I'm dismounted", f)
 }

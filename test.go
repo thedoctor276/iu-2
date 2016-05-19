@@ -17,6 +17,11 @@ func (d *DriverTest) ShowContextMenu(ID ComponentToken, m []Menu) {
 	iulog.Printf("showing %#v for %v", m, ID)
 }
 
+// CallJavascript emulates a CallJavascript() call.
+func (d *DriverTest) CallJavascript(call string) {
+	iulog.Printf("call js: %v", call)
+}
+
 // Alert emulates an Alert() call.
 func (d *DriverTest) Alert(msg string) {
 	iulog.Printf("alert %v", msg)
