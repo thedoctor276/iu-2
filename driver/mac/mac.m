@@ -472,10 +472,10 @@ void Window_Render(void* ptr, const char* HTML, const char* baseURL) {
                                baseURL:base];
 }
 
-void Window_RenderComponent(void* ptr, const char* ID, const char* component) {
+void Window_CallJavascript(void* ptr, const char* c) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
-    NSString* call = [NSString stringWithFormat:@"RenderComponent(\"%s\", %s)", ID, component];
+    NSString* call = [NSString stringWithUTF8String:c];
     [windowController.webView evaluateJavaScript: call
                                completionHandler: nil];
 }

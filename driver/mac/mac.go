@@ -10,7 +10,7 @@ package mac
 import "C"
 import (
 	"encoding/json"
-	"strconv"
+	"runtime"
 	"unsafe"
 
 	"github.com/maxence-charriere/iu"
@@ -26,6 +26,7 @@ var (
 // ============================================================================
 
 func init() {
+	runtime.LockOSThread()
 	dockPtr = C.App_Init()
 }
 
@@ -175,15 +176,11 @@ func renderWindow(ptr unsafe.Pointer, HTML string, baseURL string) {
 	C.Window_Render(ptr, cHTML, cbaseURL)
 }
 
-func renderComponentInWindow(ptr unsafe.Pointer, ID string, component string) {
-	cID := C.CString(ID)
-	defer C.free(unsafe.Pointer(cID))
+func callJavascriptInWindow(ptr unsafe.Pointer, call string) {
+	ccall := C.CString(call)
+	defer C.free(unsafe.Pointer(ccall))
 
-	component = strconv.Quote(component)
-	ccompo := C.CString(component)
-	defer C.free(unsafe.Pointer(ccompo))
-
-	C.Window_RenderComponent(ptr, cID, ccompo)
+	C.Window_CallJavascript(ptr, ccall)
 }
 
 func showContextMenu(ptr unsafe.Pointer, compoID string, menus []iu.Menu) {

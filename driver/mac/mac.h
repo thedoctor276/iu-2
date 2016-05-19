@@ -89,7 +89,7 @@ void Window_Center(void* ptr);
 void Window_Resize(void* ptr, CGFloat width, CGFloat height);
 void Window_Close(void* ptr);
 void Window_Render(void* ptr, const char* HTML, const char* baseURL);
-void Window_RenderComponent(void* ptr, const char* ID, const char* component);
+void Window_CallJavascript(void* ptr, const char* c);
 void Window_ShowContextMenu(void* ptr, const Menu__* menus, int count);
 void Window_Alert(void* ptr, const char* msg);
 
@@ -108,4 +108,5 @@ void Window_Alert(void* ptr, const char* msg);
 // ============================================================================
 
 const char* ResourcesPath();
+
 #endif /* mac_h */
