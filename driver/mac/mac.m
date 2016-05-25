@@ -62,6 +62,12 @@ void App_Quit() {
     [NSApp terminate:nil];
 }
 
+void App_SetBadge(const char* b) {
+    NSString* badge = [NSString stringWithUTF8String: b];
+    NSDockTile* dock = [NSApp dockTile];
+    [dock setBadgeLabel:badge];
+}
+
 // ============================================================================
 // Menu
 // ============================================================================
@@ -161,16 +167,17 @@ void Menu_SetMenuItem(NSMenu* nsmenu , Menu__ menu, NSString* title) {
         Menu_SetShortcut(item, shortcut);
     }
     
-    if (handlerName.length != 0) {
+    if (menu.nativeHandler) {
         item.action = NSSelectorFromString(handlerName);
         return;
     }
     
     if (menu.disabled) {
         item.action = nil;
-    } else {
-        item.action = @selector(onMenuClick:);
-    }
+        return;
+    } 
+    
+    item.action = @selector(onMenuClick:);
 }
 
 void Menu_SetShortcut(NSMenuItem* item, NSString* shortcut) {

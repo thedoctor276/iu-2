@@ -17,6 +17,7 @@
 void* App_Init();
 void App_Run();
 void App_Quit();
+void App_SetBadge(const char* b);
 
 // ============================================================================
 // Menu
@@ -30,6 +31,7 @@ typedef struct Menu__ {
     unsigned int indent;
     BOOL disabled;
     BOOL separator;
+    BOOL nativeHandler;
 } Menu__;
 
 @interface MenuItem : NSMenuItem

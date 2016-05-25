@@ -38,6 +38,13 @@ func quitApp() {
 	C.App_Quit()
 }
 
+func setAppBadge(badge string) {
+	cbadge := C.CString(badge)
+	defer C.free(unsafe.Pointer(cbadge))
+
+	C.App_SetBadge(cbadge)
+}
+
 //export onLaunch
 func onLaunch() {
 	if OnLaunch != nil {
@@ -79,9 +86,10 @@ func setDockMenu(menu iu.Menu) {
 
 func menuToCMenu(menu iu.Menu) C.Menu__ {
 	cmenu := C.Menu__{
-		indent:    C.uint(menu.Indent),
-		disabled:  cbool(menu.Disabled),
-		separator: cbool(menu.Separator),
+		indent:        C.uint(menu.Indent),
+		disabled:      cbool(menu.Disabled),
+		separator:     cbool(menu.Separator),
+		nativeHandler: cbool(menu.NativeHandler),
 	}
 
 	cmenu.name = C.CString(menu.Name)
