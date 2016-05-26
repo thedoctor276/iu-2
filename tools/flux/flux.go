@@ -1,65 +1,39 @@
+// flux is a Go implementation of the flux design pattern.
+// https://facebook.github.io/flux/docs/overview.html
 package flux
 
-import "github.com/maxence-charriere/iu-log"
-
 var (
-	mainDispatcher = newDispatcher()
+	currentDispatcher = newDispatcher()
 )
 
-// RegisterStore registers a store to the flux dispatcher.
-// The store listens for actions to be dispatched in OnDispatch(p flux.Payload).
+func init() {
+	go currentDispatcher.Run()
+}
+
 func RegisterStore(s Store) {
-	_, ok := mainDispatcher.callbacks[s.DispatchToken()]
-	if ok {
-		iulog.Warnf("%#v is already registered under token %v", s, s.DispatchToken())
-		return
-	}
-
-	id := mainDispatcher.Register(s.OnDispatch)
-	s.setDispatchToken(id)
+	currentDispatcher.RegisterStore(s)
 }
 
-// UnregisterStore removes a store from the flux dispatcher.
-// The store stops listening dispatched actions.
 func UnregisterStore(s Store) {
-	_, ok := mainDispatcher.callbacks[s.DispatchToken()]
-	if !ok {
-		iulog.Warnf("%#v is already unregistered", s)
-		return
-	}
-
-	mainDispatcher.Unregister(s.DispatchToken())
+	currentDispatcher.UnregisterStore(s)
 }
 
-// WaitFor waits that the specified stores finish handling dispatch actions
-// before continuing the current dispatch.
-func WaitFor(s ...Store) {
-	ids := make([]DispatchToken, len(s))
-
-	for i := 0; i < len(s); i++ {
-		ids[i] = s[i].DispatchToken()
-	}
-
-	mainDispatcher.WaitFor(ids...)
+// Dispatch dispatches an action without payload by an action identifier
+// to all the registered stores.
+func Dispatch(a ActionID) {
+	DispatchWithPayload(a, nil)
 }
 
-// Dispatch dispatches a payload..
-func Dispatch(p Payload) {
-	mainDispatcher.Dispatch(p)
+// DispatchWithPayload dispatches an action with a payload by an action identifier
+// to all the registered stores.
+func DispatchWithPayload(a ActionID, payload interface{}) {
+	DispatchAction(Action{
+		ID:      a,
+		Payload: payload,
+	})
 }
 
-// DispatchAction dispatches an action.
+// DispatchAction dispatches an action to all the registered stores.
 func DispatchAction(a Action) {
-	mainDispatcher.Dispatch(Payload{
-		Action: a,
-	})
-
-}
-
-// DispatchActionWithData dispatches an action with data.
-func DispatchActionWithData(a Action, d interface{}) {
-	mainDispatcher.Dispatch(Payload{
-		Action: a,
-		Data:   d,
-	})
+	currentDispatcher.DispChan <- a
 }

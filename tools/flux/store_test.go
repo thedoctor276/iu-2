@@ -1,88 +1,74 @@
 package flux
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/maxence-charriere/iu-log"
 )
 
-type FooStore struct {
-	*StoreBase
-}
-
-func (f *FooStore) OnDispatch(p Payload) {
-	iulog.Print("FooStore handles OnDispatch(p Payload)")
-}
-
-func NewFooStore() *FooStore {
-	return &FooStore{
-		StoreBase: NewStoreBase(),
+var (
+	SimpleListener = func(e Event) {
+		fmt.Println("SimpleListener called")
 	}
+)
+
+func TestNewStoreBase(t *testing.T) {
+	NewStoreBase()
 }
 
-type BarStore struct {
-	Foo *FooStore
-	*StoreBase
-}
+func TestStoreBaseID(t *testing.T) {
+	s := NewStoreBase()
+	s.SetID(42)
 
-func (b *BarStore) OnDispatch(p Payload) {
-	WaitFor(b.Foo)
-	iulog.Print("BarStore handles OnDispatch(p Payload)")
-}
-
-func NewBarStore() *BarStore {
-	return &BarStore{
-		StoreBase: NewStoreBase(),
-	}
-}
-
-func TestStoreBaseDispatchToken(t *testing.T) {
-	s := NewFooStore()
-	s.setDispatchToken(42)
-
-	if id := s.DispatchToken(); id != 42 {
-		t.Error("is should be 42:", id)
+	if id := s.ID(); id != StoreID(42) {
+		t.Error("id should be 42:", id)
 	}
 }
 
 func TestStoreBaseAddListener(t *testing.T) {
-	s := NewFooStore()
-	l := func(e Event) {}
-	s.AddListener(l)
+	s := NewStoreBase()
+
+	s.AddListener(SimpleListener)
 
 	if l := len(s.listeners); l != 1 {
-		t.Errorf("l should be 1: %v", l)
+		t.Error("l should be 1:", l)
 	}
 }
 
 func TestStoreBaseRemoveListener(t *testing.T) {
-	s := NewFooStore()
-	l := func(e Event) {}
-	id := s.AddListener(l)
-	s.RemoveListener(id)
+	s := NewStoreBase()
 
-	if l := len(s.listeners); l != 0 {
-		t.Errorf("l should be 0: %v", l)
+	lid := s.AddListener(SimpleListener)
+	s.AddListener(SimpleListener)
+
+	s.RemoveListener(lid)
+
+	if l := len(s.listeners); l != 1 {
+		t.Fatal("l should be 1:", l)
 	}
-}
-
-func TestStoreBaseRemoveNonexistentListener(t *testing.T) {
-	s := NewFooStore()
-	s.RemoveListener(42)
 }
 
 func TestStoreBaseEmit(t *testing.T) {
-	emited := false
-	s := NewFooStore()
+	s := NewStoreBase()
+	c := make(chan bool)
 
 	l := func(e Event) {
-		emited = true
+		t.Log("l ->", e)
+		c <- true
+	}
+
+	l2 := func(e Event) {
+		t.Log("l2 ->", e)
+		c <- true
 	}
 
 	s.AddListener(l)
-	s.Emit("Test")
+	s.AddListener(l2)
 
-	if !emited {
-		t.Errorf("emited should be %v: %v", true, emited)
-	}
+	go s.Emit(Event{
+		ID:      "test",
+		Payload: "J'aime les filles",
+	})
+
+	<-c
+	<-c
 }
