@@ -6,101 +6,55 @@ import (
 	"github.com/maxence-charriere/iu-log"
 )
 
-// DispatchToken identifies a callback withhin a Dispatcher.
-type DispatchToken uint
-
 type dispatcher struct {
-	callbacks      map[DispatchToken]*callback
-	dispatching    bool
-	lastID         DispatchToken
-	pendingPayload Payload
-	mtx            sync.Mutex
+	DispChan    chan Action
+	stores      map[StoreID]Store
+	lastStoreID StoreID
+	mtx         sync.Mutex
 }
 
-// Register registers a callback to be invoked with every dispatched payload.
-// Returns a token that can be used with `flux.Dispatcher.WaitFor()`.
-func (disp *dispatcher) Register(c Callback) DispatchToken {
-	disp.mtx.Lock()
-	defer disp.mtx.Unlock()
+func (d *dispatcher) RegisterStore(s Store) {
+	d.mtx.Lock()
+	defer d.mtx.Unlock()
 
-	disp.lastID++
-	id := disp.lastID
-	disp.callbacks[id] = newCallback(c)
-	return id
-}
-
-// Unregister removes a callback based on its token.
-func (disp *dispatcher) Unregister(ID DispatchToken) {
-	_, ok := disp.callbacks[ID]
-	if !ok {
-		iulog.Warnf("%v does not map to a registered callback", ID)
+	if _, ok := d.stores[s.ID()]; ok {
+		iulog.Panicf("store with ID = %v is already registered", s.ID())
 	}
 
-	delete(disp.callbacks, ID)
+	d.lastStoreID++
+	id := d.lastStoreID
+	s.SetID(id)
+	d.stores[id] = s
 }
 
-// WaitFor waits for the callbacks specified to be invoked before continuing execution
-// of the current callback. This method should only be used by a callback in
-// response to a dispatched payload.
-func (disp *dispatcher) WaitFor(IDs ...DispatchToken) {
-	if !disp.dispatching {
-		iulog.Panic("must be invoked while dispatching")
-	}
+func (d *dispatcher) UnregisterStore(s Store) {
+	d.mtx.Lock()
+	defer d.mtx.Unlock()
 
-	for _, ID := range IDs {
-		c, ok := disp.callbacks[ID]
-		if !ok {
-			iulog.Panicf("%v does not map to a registered callback", ID)
+	delete(d.stores, s.ID())
+}
+
+func (d *dispatcher) Run() {
+	defer close(d.DispChan)
+
+	for {
+		select {
+		case action := <-d.DispChan:
+			d.dispatch(action)
 		}
 
-		if c.Pending {
-			iulog.Warn(c)
-			if !c.Handled {
-				iulog.Panicf("circular dependency detected while waiting for %v", ID)
-			}
-
-			continue
-		}
-
-		c.Call(disp.pendingPayload)
-	}
-
-}
-
-// Dispatch dispatches a payload to all registered callbacks.
-func (disp *dispatcher) Dispatch(p Payload) {
-	if disp.dispatching {
-		iulog.Panic("cannot dispatch in the middle of a dispatch")
-	}
-
-	disp.startDispatching(p)
-	defer disp.stopDispatching()
-
-	for _, c := range disp.callbacks {
-		if c.Pending {
-			continue
-		}
-
-		c.Call(disp.pendingPayload)
 	}
 }
 
-func (disp *dispatcher) startDispatching(p Payload) {
-	for _, c := range disp.callbacks {
-		c.Init()
+func (d *dispatcher) dispatch(a Action) {
+	for _, store := range d.stores {
+		store.OnDispatch(a)
 	}
-
-	disp.pendingPayload = p
-	disp.dispatching = true
-}
-
-func (disp *dispatcher) stopDispatching() {
-	disp.pendingPayload = Payload{}
-	disp.dispatching = false
 }
 
 func newDispatcher() *dispatcher {
 	return &dispatcher{
-		callbacks: map[DispatchToken]*callback{},
+		DispChan: make(chan Action, 42),
+		stores:   map[StoreID]Store{},
 	}
 }

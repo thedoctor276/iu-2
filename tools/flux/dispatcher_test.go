@@ -1,114 +1,88 @@
 package flux
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
-func TestDispatcherRegister(t *testing.T) {
-	disp := newDispatcher()
-	disp.Register(func(p Payload) {})
+// ============================================================================
+// StoreTest
+// ============================================================================
 
-	if l := len(disp.callbacks); l != 1 {
-		t.Errorf("l should be 1: %v", l)
+const (
+	TestAction ActionID = "test-action"
+)
+
+type StoreTest struct {
+	*StoreBase
+}
+
+func (s *StoreTest) OnDispatch(a Action) {
+	switch a.ID {
+	case TestAction:
+		fmt.Println("OnDispatch for", a)
 	}
 }
 
-func TestDispatcherUnregister(t *testing.T) {
-	disp := newDispatcher()
-	ID := disp.Register(func(p Payload) {})
-	disp.Unregister(ID)
-
-	if l := len(disp.callbacks); l != 0 {
-		t.Errorf("l should be 0: %v", l)
+func newStoreTest() *StoreTest {
+	return &StoreTest{
+		StoreBase: NewStoreBase(),
 	}
 }
 
-func TestDispatcherUnregisterNonRegistered(t *testing.T) {
-	disp := newDispatcher()
-	ID := DispatchToken(42)
-	disp.Unregister(ID)
+// ============================================================================
+// Tests
+// ============================================================================
+
+func TestNewDispatcher(t *testing.T) {
+	newDispatcher()
 }
 
-func TestDispatcherWaitFor(t *testing.T) {
-	disp := newDispatcher()
-	fooID := DispatchToken(777)
+func TestDispatcherRegisterStore(t *testing.T) {
+	d := newDispatcher()
+	s := newStoreTest()
+	d.RegisterStore(s)
 
-	foo := func(p Payload) {
-		t.Log("foo called")
+	if l := len(d.stores); l != 1 {
+		t.Error("l should be 1:", l)
 	}
-
-	bar := func(p Payload) {
-		t.Log("bar called")
-		disp.WaitFor(fooID)
-	}
-
-	boom := func(p Payload) {
-		t.Log("boom called")
-		disp.WaitFor(fooID)
-	}
-
-	disp.Register(bar)
-	fooID = disp.Register(foo)
-	disp.Register(boom)
-	disp.Dispatch(Payload{})
 }
 
-func TestDispatcherCircularWaitFor(t *testing.T) {
+func TestDispatcherRegisterStoreRegistered(t *testing.T) {
 	defer func() { recover() }()
 
-	disp := newDispatcher()
-	barID := DispatchToken(999)
-
-	bar := func(p Payload) {
-		t.Log("bar called", barID)
-		disp.WaitFor(barID)
-	}
-
-	barID = disp.Register(bar)
-	disp.Dispatch(Payload{})
+	d := newDispatcher()
+	s := newStoreTest()
+	d.RegisterStore(s)
+	d.RegisterStore(s)
 	t.Error("should panic")
 }
 
-func TestDispatcherWaitForNonRegistered(t *testing.T) {
-	defer func() { recover() }()
+func TestDispatcherUnregisterStore(t *testing.T) {
+	d := newDispatcher()
+	s := newStoreTest()
+	s2 := newStoreTest()
+	d.RegisterStore(s)
+	d.RegisterStore(s2)
 
-	disp := newDispatcher()
+	d.UnregisterStore(s)
 
-	bar := func(p Payload) {
-		disp.WaitFor(4242)
+	if l := len(d.stores); l != 1 {
+		t.Fatal("l should be 1:", l)
 	}
 
-	disp.Register(bar)
-	disp.Dispatch(Payload{})
-	t.Error("should panic")
-}
+	if s3 := d.stores[s2.ID()]; s3 != s2 {
+		t.Errorf("s3 should be s2: %p != %p", s3, s2)
+	}
 
-func TestDispatcherWaitForOutsideDispatch(t *testing.T) {
-	defer func() { recover() }()
-
-	disp := newDispatcher()
-	disp.WaitFor(84)
-	t.Error("should panic")
 }
 
 func TestDispatcherDispatch(t *testing.T) {
-	p := Payload{Action: "foo"}
-	disp := newDispatcher()
-
-	disp.Register(func(p Payload) {
-		t.Log(p)
+	d := newDispatcher()
+	s := newStoreTest()
+	d.RegisterStore(s)
+	d.dispatch(Action{
+		ID:      TestAction,
+		Payload: "La vie en rose",
 	})
-
-	disp.Dispatch(p)
-}
-
-func TestDispatcherDispatchInDispatch(t *testing.T) {
-	defer func() { recover() }()
-
-	disp := newDispatcher()
-
-	disp.Register(func(p Payload) {
-		disp.Dispatch(p)
-	})
-
-	disp.Dispatch(Payload{})
-	t.Error("should panic")
 }
