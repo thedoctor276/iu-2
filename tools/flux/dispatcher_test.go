@@ -72,7 +72,7 @@ func TestDispatcherUnregisterStore(t *testing.T) {
 	}
 
 	if s3 := d.stores[s2.ID()]; s3 != s2 {
-		t.Errorf("s3 should be s2: %p != %p", s3, s2)
+		t.Errorf("s3 should be s2: %v != %v", s3, s2)
 	}
 
 }
