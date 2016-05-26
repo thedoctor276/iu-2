@@ -1,4 +1,4 @@
-// flux is a Go implementation of the flux design pattern.
+// Package flux is a Go implementation of the flux design pattern.
 // https://facebook.github.io/flux/docs/overview.html
 package flux
 
@@ -10,10 +10,13 @@ func init() {
 	go currentDispatcher.Run()
 }
 
+// RegisterStore registers a store to receive dispatched actions.
 func RegisterStore(s Store) {
 	currentDispatcher.RegisterStore(s)
 }
 
+// UnregisterStore unregisters a store from the dispatcher.
+// The store will no longer receive dispatched actions.
 func UnregisterStore(s Store) {
 	currentDispatcher.UnregisterStore(s)
 }
