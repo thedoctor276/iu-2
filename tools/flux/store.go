@@ -2,6 +2,7 @@ package flux
 
 import "sync"
 
+// Store represents a store in the flux design pattern.
 type Store interface {
 	OnDispatch(a Action)
 
@@ -10,8 +11,10 @@ type Store interface {
 	SetID(ID StoreID)
 }
 
+// StoreID represents a store identifier.
 type StoreID int
 
+// StoreBase is the base struct which should be embedded in every store implementation.
 type StoreBase struct {
 	id             StoreID
 	listeners      map[ListenerID]Listener
@@ -19,14 +22,19 @@ type StoreBase struct {
 	mtx            sync.Mutex
 }
 
+// ID returns the store ID.
 func (s *StoreBase) ID() StoreID {
 	return s.id
 }
 
+// SetID sets the ID of the store.
+// Used internally by the dispatcher.
+// Should not be called.
 func (s *StoreBase) SetID(ID StoreID) {
 	s.id = ID
 }
 
+// AddListener adds a listener to the store.
 func (s *StoreBase) AddListener(l Listener) ListenerID {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
@@ -38,6 +46,7 @@ func (s *StoreBase) AddListener(l Listener) ListenerID {
 	return id
 }
 
+// RemoveListener removes a listener from the store.
 func (s *StoreBase) RemoveListener(ID ListenerID) {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
