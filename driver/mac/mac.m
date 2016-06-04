@@ -59,13 +59,18 @@ void App_Run() {
 }
 
 void App_Quit() {
-    [NSApp terminate:nil];
+    defer(
+        [NSApp terminate:nil];
+    );
 }
 
 void App_SetBadge(const char* b) {
     NSString* badge = [NSString stringWithUTF8String: b];
-    NSDockTile* dock = [NSApp dockTile];
-    [dock setBadgeLabel:badge];
+    
+    defer(
+        NSDockTile* dock = [NSApp dockTile];
+        [dock setBadgeLabel:badge];
+    );
 }
 
 // ============================================================================
@@ -434,83 +439,101 @@ void* Window_Create(const char* ID, WindowConfig__ conf) {
 }
 
 void Window_Show(void* ptr) {
-    WindowController* windowController = (__bridge WindowController*)ptr;
-    [windowController showWindow:windowController];
+    defer(
+        WindowController* windowController = (__bridge WindowController*)ptr;
+        [windowController showWindow:windowController];
+    );
 }
 
 void Window_Move(void* ptr, CGFloat x, CGFloat y) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
-    CGPoint origin = windowController.window.frame.origin;
-    origin.x = x;
-    origin.y = y;
-    [windowController.window setFrameOrigin:origin];
+    defer(
+        CGPoint origin = windowController.window.frame.origin;
+        origin.x = x;
+        origin.y = y;
+        [windowController.window setFrameOrigin:origin];
+    );
 }
 
 void Window_Center(void* ptr) {
     WindowController* windowController = (__bridge WindowController*)ptr;
-    [windowController.window center];
+    
+    defer(
+        [windowController.window center];
+    );
 }
 
 void Window_Resize(void* ptr, CGFloat width, CGFloat height) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     
-    CGRect frame = windowController.window.frame;
-    frame.size.width = width;
-    frame.size.height = height;
-    [windowController.window setFrame:frame
-                              display:YES];
+    defer(
+        CGRect frame = windowController.window.frame;
+        frame.size.width = width;
+        frame.size.height = height;
+        [windowController.window setFrame:frame
+                                  display:YES];
+    );
 }
 
 void Window_Close(void* ptr) {
     WindowController* windowController = (__bridge WindowController*)ptr;
-    [windowController.window performClose:windowController];
+    
+    defer(
+        [windowController.window performClose:windowController];
+    );
 }
 
 void Window_Render(void* ptr, const char* HTML, const char* baseURL) {
     WindowController* windowController = (__bridge WindowController*)ptr;
-    
     NSData* html = [NSData dataWithBytes:HTML length:strlen(HTML)];
     NSURL* base = [NSURL fileURLWithPath:[NSString stringWithUTF8String: baseURL]];
     
-    [windowController.webView loadData:html
-                              MIMEType:@"text/html"
-                 characterEncodingName:@"UTF-8"
-                               baseURL:base];
+    defer(
+        [windowController.webView loadData:html
+                                  MIMEType:@"text/html"
+                     characterEncodingName:@"UTF-8"
+                                   baseURL:base];
+    );
 }
 
 void Window_CallJavascript(void* ptr, const char* c) {
     WindowController* windowController = (__bridge WindowController*)ptr;
-    
     NSString* call = [NSString stringWithUTF8String:c];
-    [windowController.webView evaluateJavaScript: call
-                               completionHandler: nil];
+    
+    defer(
+        [windowController.webView evaluateJavaScript: call
+                                   completionHandler: nil];
+    );
 }
 
 void Window_ShowContextMenu(void* ptr, const Menu__* menus, int count) {
     WindowController* windowController = (__bridge WindowController*)ptr;
-    
     NSMenu* ctxm = [[NSMenu alloc] initWithTitle:@"Context Menu"];
     
     for (int i = 0; i < count; ++i) {
         Menu_SetContext(ctxm, menus[i]);
     }
     
-    NSPoint p = [windowController.window mouseLocationOutsideOfEventStream];
+    defer(
+        NSPoint p = [windowController.window mouseLocationOutsideOfEventStream];
 
-    [ctxm popUpMenuPositioningItem:ctxm.itemArray[0]
-                        atLocation:p
-                            inView:windowController.webView];
+        [ctxm popUpMenuPositioningItem:ctxm.itemArray[0]
+                            atLocation:p
+                                inView:windowController.webView];
+    );
 }
 
 void Window_Alert(void* ptr, const char* msg) {
     WindowController* windowController = (__bridge WindowController*)ptr;
     NSString* message = [NSString stringWithUTF8String:msg];
     
-    NSAlert* alert = [[NSAlert alloc] init];
-    [alert setMessageText:message];
-    [alert beginSheetModalForWindow:windowController.window
-                  completionHandler:nil];
+    defer(
+        NSAlert* alert = [[NSAlert alloc] init];
+        [alert setMessageText:message];
+        [alert beginSheetModalForWindow:windowController.window
+                      completionHandler:nil];
+    );
 }
 
 // ============================================================================
