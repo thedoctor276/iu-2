@@ -2,6 +2,18 @@ package iu
 
 import "fmt"
 
+// NavigateHandler is the representation of a component which can perform
+// an action when navigated on.
+type NavigateHandler interface {
+	OnNavigate()
+}
+
+// LeaveHandler is the representation of a component which can perform
+// an action when leaving.
+type LeaveHandler interface {
+	OnLeave()
+}
+
 // Navigation is a representation of a container which handles
 // navigation between components.
 type Navigation interface {
@@ -18,6 +30,12 @@ type Navigation interface {
 	CanNext() bool
 
 	Next() error
+}
+
+func (n *navigation) OnMount() {
+	if nh, ok := n.current.(NavigateHandler); ok {
+		nh.OnNavigate()
+	}
 }
 
 func (n *navigation) OnDismount() {
@@ -48,6 +66,10 @@ func (n *navigation) CurrentComponent() Component {
 }
 
 func (n *navigation) Go(c Component) {
+	if lh, ok := n.current.(LeaveHandler); ok {
+		lh.OnLeave()
+	}
+
 	n.history = cleanhistory(n.history, n.index+1)
 	n.history = append(n.history, c)
 	n.index++
@@ -55,6 +77,11 @@ func (n *navigation) Go(c Component) {
 
 	d := DriverByComponent(n)
 	MountComponent(c, d)
+
+	if nh, ok := c.(NavigateHandler); ok {
+		nh.OnNavigate()
+	}
+
 	RenderComponent(n)
 }
 
@@ -68,8 +95,17 @@ func (n *navigation) Back() (err error) {
 		return
 	}
 
+	if lh, ok := n.current.(LeaveHandler); ok {
+		lh.OnLeave()
+	}
+
 	n.index--
 	n.current = n.CurrentComponent()
+
+	if nh, ok := n.current.(NavigateHandler); ok {
+		nh.OnNavigate()
+	}
+
 	RenderComponent(n)
 	return
 }
@@ -84,8 +120,17 @@ func (n *navigation) Next() (err error) {
 		return
 	}
 
+	if lh, ok := n.current.(LeaveHandler); ok {
+		lh.OnLeave()
+	}
+
 	n.index++
 	n.current = n.CurrentComponent()
+
+	if nh, ok := n.current.(NavigateHandler); ok {
+		nh.OnNavigate()
+	}
+
 	RenderComponent(n)
 	return
 }

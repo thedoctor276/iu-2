@@ -32,6 +32,14 @@ func (f *Foo) OnDismount() {
 	iulog.Printf("%p ~> I'm dismounted", f)
 }
 
+func (f *Foo) OnNavigate() {
+	iulog.Printf("%p ~> just navigated", f)
+}
+
+func (f *Foo) OnLeave() {
+	iulog.Printf("%p ~> just leaving", f)
+}
+
 func (f *Foo) ContextMenu() []Menu {
 	return []Menu{
 		Menu{

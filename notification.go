@@ -15,6 +15,6 @@ func init() {
 }
 
 // SetBadge set the app badge.
-func SetBadge(badge string) {
-	SetBadgeHandler(badge)
+func SetBadge(v ...interface{}) {
+	SetBadgeHandler(fmt.Sprint(v...))
 }
