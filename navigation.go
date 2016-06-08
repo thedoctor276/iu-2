@@ -32,12 +32,6 @@ type Navigation interface {
 	Next() error
 }
 
-func (n *navigation) OnMount() {
-	if nh, ok := n.current.(NavigateHandler); ok {
-		nh.OnNavigate()
-	}
-}
-
 func (n *navigation) OnDismount() {
 	n.current = nil
 	n.history = cleanhistory(n.history, 0)
