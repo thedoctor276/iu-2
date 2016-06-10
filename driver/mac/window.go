@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	windows = map[string]*Window{}
+	windows       = map[string]*Window{}
+	currentWindow *Window
 )
 
 // Window represents a cocoa window driver.
@@ -93,4 +94,13 @@ func NewWindow(main iu.Component, c iu.DriverConfig) *Window {
 	iu.RegisterDriver(w)
 	renderWindow(w.ptr, w.Render(), iu.ResourcesPath())
 	return w
+}
+
+// CurrentWindow returns the window which have focus.
+func CurrentWindow() (*Window, bool) {
+	if currentWindow == nil {
+		return nil, false
+	}
+
+	return currentWindow, true
 }
