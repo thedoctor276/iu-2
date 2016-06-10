@@ -31,6 +31,7 @@ func resourcesPath(elem ...string) string {
 	resources := "resources"
 
 	if packaged {
+		iulog.Warn("I'm packaged")
 		resources = appResourcesPath()
 	}
 

@@ -1,8 +1,6 @@
 // Package mac is the mac OSX driver for iu framework.
 package mac
 
-import "github.com/maxence-charriere/iu"
-
 var (
 	// OnLaunch is a handler which is called when the app is launched.
 	// The call occurs after the call of Run().
@@ -29,16 +27,4 @@ func Run() {
 // Quit quits the app.
 func Quit() {
 	quitApp()
-}
-
-// SetMenu set a menu item in the app menu.
-func SetMenu(menu iu.Menu) {
-	registerMenuHandler(menu)
-	setMenu(menu)
-}
-
-// SetDockMenu set a menu item in the app dock menu.
-func SetDockMenu(menu iu.Menu) {
-	registerMenuHandler(menu)
-	setDockMenu(menu)
 }

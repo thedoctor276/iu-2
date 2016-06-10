@@ -287,10 +287,10 @@ func onWindowResize(ID *C.char, width C.CGFloat, height C.CGFloat) {
 func onWindowFocus(ID *C.char) {
 	id := iu.DriverToken(C.GoString(ID))
 	d, _ := iu.DriverByID(id)
-	w := d.(*Window)
+	currentWindow = d.(*Window)
 
-	if w.OnFocus != nil {
-		w.OnFocus()
+	if currentWindow.OnFocus != nil {
+		currentWindow.OnFocus()
 	}
 }
 

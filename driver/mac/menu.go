@@ -124,6 +124,18 @@ var (
 
 type menuHandlerMap map[string]func()
 
+// SetMenu set a menu item in the app menu.
+func SetMenu(menu iu.Menu) {
+	registerMenuHandler(menu)
+	setMenu(menu)
+}
+
+// SetDockMenu set a menu item in the app dock menu.
+func SetDockMenu(menu iu.Menu) {
+	registerMenuHandler(menu)
+	setDockMenu(menu)
+}
+
 func registerMenuHandler(m iu.Menu) {
 	if m.Handler == nil {
 		return
