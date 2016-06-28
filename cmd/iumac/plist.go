@@ -66,10 +66,8 @@ var (
         <key>NSAllowsArbitraryLoads</key>
         <true/>
     </dict>
-	<key>com.apple.security.app-sandbox</key>
-    <true/>
-    <key>com.apple.security.inherit</key>
-    <true/>
+	{{if .SandboxMode}}<key>com.apple.security.app-sandbox</key>
+    <true/>{{end}}
 </dict>
 </plist>
 `
@@ -97,6 +95,7 @@ type Plist struct {
 	LSMinimumSystemVersion        string
 	CFBundleIconFile              string
 	LSUIElement                   string
+	SandboxMode                   bool
 }
 
 func (plist Plist) Save(contentsPath string) error {
@@ -122,7 +121,7 @@ func MakePlist(contentsPath string, conf config.App) Plist {
 		CFBundleVersion:               conf.Version,
 		CFBundleName:                  conf.Name,
 		CFBundleDisplayName:           conf.Name,
-		CFBundleExecutable:            ExecName,
+		CFBundleExecutable:            conf.Name,
 		CFBundleIdentifier:            conf.Mac.Identifier,
 		CFBundlePackageType:           "APPL",
 		CFBundleSignature:             "????",
@@ -137,7 +136,8 @@ func MakePlist(contentsPath string, conf config.App) Plist {
 		DTPlatformName:                "macosx10.11",
 		DTSDKBuild:                    "15C43",
 		LSMinimumSystemVersion:        conf.Mac.DeploymentTarget,
-		CFBundleIconFile:              conf.Mac.Icon,
+		CFBundleIconFile:              iconId(conf.Mac.Icon),
 		LSUIElement:                   "true",
+		SandboxMode:                   conf.Mac.SandboxMode,
 	}
 }

@@ -23,6 +23,7 @@ type Mac struct {
 	Identifier        string
 	DeploymentTarget  string
 	Icon              string
+	SandboxMode       bool
 }
 
 // Exists informs about if the config file exists or not.

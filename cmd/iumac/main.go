@@ -7,8 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-
-	"github.com/maxence-charriere/iu/tools/config"
 )
 
 var (
@@ -57,54 +55,54 @@ func Build() (err error) {
 }
 
 func MakeApp() (err error) {
-	var conf config.App
-	var appName = path.Join(WorkingDir, ExecName+".app")
-	var contentsPath = path.Join(appName, "Contents")
-	var macOSPath = path.Join(contentsPath, "MacOS")
-	var resourcesPath = path.Join(contentsPath, "Resources")
-	var resourcesSrc = path.Join(WorkingDir, "resources")
-	var plist Plist
-
-	if conf, err = GetConfig(); err != nil {
-		return
+	conf, err := GetConfig()
+	if err != nil {
+		return err
 	}
 
+	appName := path.Join(WorkingDir, conf.Name+".app")
 	if err = os.MkdirAll(appName, os.ModeDir|0755); err != nil {
-		return
+		return err
 	}
 
-	if err = os.MkdirAll(contentsPath, os.ModeDir|0755); err != nil {
-		return
+	contentsPath := path.Join(appName, "Contents")
+	if err := os.MkdirAll(contentsPath, os.ModeDir|0755); err != nil {
+		return err
 	}
 
-	if err = os.MkdirAll(macOSPath, os.ModeDir|0755); err != nil {
-		return
+	macOSPath := path.Join(contentsPath, "MacOS")
+	if err := os.MkdirAll(macOSPath, os.ModeDir|0755); err != nil {
+		return err
 	}
 
-	if err = os.MkdirAll(resourcesPath, os.ModeDir|0755); err != nil {
-		return
+	resourcesPath := path.Join(contentsPath, "Resources")
+	if err := os.MkdirAll(resourcesPath, os.ModeDir|0755); err != nil {
+		return err
 	}
 
-	plist = MakePlist(contentsPath, conf)
-
-	if err = plist.Save(contentsPath); err != nil {
-		return
+	plist := MakePlist(contentsPath, conf)
+	if err := plist.Save(contentsPath); err != nil {
+		return err
 	}
 
-	if err = os.Rename(ExecName, path.Join(macOSPath, ExecName)); err != nil {
-		return
+	if err := os.Rename(ExecName, path.Join(macOSPath, conf.Name)); err != nil {
+		return err
 	}
 
-	if _, err = os.Stat(resourcesSrc); err != nil {
+	resourcesSrc := path.Join(WorkingDir, "resources")
+	if _, err := os.Stat(resourcesSrc); err != nil {
 		if os.IsNotExist(err) {
 			err = nil
 		}
 
-		return
+		return err
 	}
 
-	err = MakeResources(contentsPath, resourcesSrc)
-	return
+	if err := MakeResources(contentsPath, resourcesSrc); err != nil {
+		return err
+	}
+
+	return GenerateIcon(resourcesPath, conf.Mac.Icon)
 }
 
 func MakeResources(contentsPath string, resourcesSrc string) (err error) {

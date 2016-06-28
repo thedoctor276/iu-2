@@ -55,6 +55,7 @@ void* App_Init() {
 }
 
 void App_Run() {
+    [NSApp activateIgnoringOtherApps : YES];
     [NSApp run];
 }
 
