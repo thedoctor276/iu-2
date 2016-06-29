@@ -21,7 +21,7 @@ func UnregisterStore(s Store) {
 	currentDispatcher.UnregisterStore(s)
 }
 
-// Dispatch dispatches an action without payload by an action identifier
+// Dispatch dispatches an action by an action identifier
 // to all the registered stores.
 func Dispatch(a ActionID) {
 	DispatchWithPayload(a, nil)

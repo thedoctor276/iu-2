@@ -54,8 +54,24 @@ func (s *StoreBase) RemoveListener(ID ListenerID) {
 	delete(s.listeners, ID)
 }
 
-// Emit sends an event to all registered listeners.
-func (s *StoreBase) Emit(e Event) {
+// Emit sends an event by an event identifier to all registered listeners.
+func (s *StoreBase) Emit(ID EventID) {
+	s.EmitEvent(Event{
+		ID: ID,
+	})
+}
+
+// EmitWithPayload sends an event with a payload by
+// an event identifier to all registered listeners.
+func (s *StoreBase) EmitWithPayload(ID EventID, payload interface{}) {
+	s.EmitEvent(Event{
+		ID:      ID,
+		Payload: payload,
+	})
+}
+
+// EmitEvent sends an event to all registered listeners.
+func (s *StoreBase) EmitEvent(e Event) {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 

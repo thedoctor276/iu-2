@@ -51,11 +51,12 @@ func (w *Window) Resize(width float64, height float64) {
 }
 
 // RenderComponent renders a component.
-func (w *Window) RenderComponent(ID iu.ComponentToken, component string) {
-	component = strconv.Quote(component)
-	call := fmt.Sprintf(`RenderComponent("%v", %v)`, ID, component)
+func (w *Window) RenderComponent(ID iu.ComponentToken, component string) string {
+	c := strconv.Quote(component)
+	call := fmt.Sprintf(`RenderComponent("%v", %v)`, ID, c)
 
 	w.CallJavascript(call)
+	return component
 }
 
 // ShowContextMenu shows a context menu.

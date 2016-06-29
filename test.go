@@ -1,6 +1,10 @@
 package iu
 
-import "github.com/maxence-charriere/iu-log"
+import (
+	"fmt"
+
+	"github.com/maxence-charriere/iu-log"
+)
 
 // DriverTest is a driver to be used only for test purpose.
 type DriverTest struct {
@@ -8,8 +12,10 @@ type DriverTest struct {
 }
 
 // RenderComponent emulates a RenderComponent() call.
-func (d *DriverTest) RenderComponent(ID ComponentToken, component string) {
-	iulog.Printf("rendering %v: %v", ID, component)
+func (d *DriverTest) RenderComponent(ID ComponentToken, component string) string {
+	c := fmt.Sprintf("rendering %v: %v", ID, component)
+	iulog.Print(c)
+	return c
 }
 
 // ShowContextMenu emulates a ShowContextMenu() call.

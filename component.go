@@ -31,17 +31,19 @@ type RenderHandler interface {
 
 // RenderComponent renders a component.
 // Should be called when a component needs to be redrawn.
-func RenderComponent(c Component) {
+func RenderComponent(c Component) string {
 	ic := innerComponent(c)
 	d := ic.Driver
 
-	d.RenderComponent(ic.ID, ic.Render())
+	r := d.RenderComponent(ic.ID, ic.Render())
 
 	ForRangeComponent(c, func(c Component) {
 		if rh, ok := c.(RenderHandler); ok {
 			rh.OnRender()
 		}
 	})
+
+	return r
 }
 
 type component struct {

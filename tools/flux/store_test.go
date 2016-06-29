@@ -64,11 +64,11 @@ func TestStoreBaseEmit(t *testing.T) {
 	s.AddListener(l)
 	s.AddListener(l2)
 
-	go s.Emit(Event{
-		ID:      "test",
-		Payload: "J'aime les filles",
-	})
+	go s.Emit("test")
+	go s.EmitWithPayload("test", "j'aime les filles")
 
+	<-c
+	<-c
 	<-c
 	<-c
 }

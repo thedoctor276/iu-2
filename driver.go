@@ -61,7 +61,7 @@ type Driver interface {
 
 	Nav() Navigation
 
-	RenderComponent(ID ComponentToken, component string)
+	RenderComponent(ID ComponentToken, component string) string
 
 	ShowContextMenu(ID ComponentToken, m []Menu)
 
