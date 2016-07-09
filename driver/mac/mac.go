@@ -59,6 +59,13 @@ func onReopen() {
 	}
 }
 
+//export onOpenFile
+func onOpenFile(filename *C.char) {
+	if OnOpenFile != nil {
+		OnOpenFile(C.GoString(filename))
+	}
+}
+
 //export onQuit
 func onQuit() {
 	if OnQuit != nil {

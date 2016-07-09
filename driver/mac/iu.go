@@ -10,6 +10,10 @@ var (
 	// and the user try to launch it again.
 	OnReopen func()
 
+	// OnOpenFile is a handler which is called when the app is activated
+	// by a file open request.
+	OnOpenFile func(filename string)
+
 	// OnQuit is a handler which is call when the app is about to quit.
 	OnQuit func()
 

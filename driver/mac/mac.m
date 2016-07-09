@@ -12,12 +12,17 @@
     return self;
 }
 
-- (void)applicationDidFinishLaunching:(nonnull NSNotification *)aNotification {
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     onLaunch();
 }
 
-- (BOOL) applicationShouldHandleReopen:(nonnull NSApplication *)sender hasVisibleWindows:(BOOL)flag {
+- (BOOL) applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)flag {
     onReopen();
+    return YES;
+}
+
+- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
+    onOpenFile((char*)[filename UTF8String]);
     return YES;
 }
 

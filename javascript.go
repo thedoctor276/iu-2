@@ -63,7 +63,7 @@ function MakeKeyboardEvent(event) {
 
 function CallEventHandler(id, eventName, arg) {    
     const argType = arg.type;
-        
+    
     switch (argType) {
         case "click":
         case "contextmenu":
@@ -85,7 +85,7 @@ function CallEventHandler(id, eventName, arg) {
             arg = JSON.stringify(MakeMouseEvent(arg));
             break;
             
-        case "wheel":
+        case "mousewheel":
             arg = JSON.stringify(MakeWheelEvent(arg));
             break;
             
