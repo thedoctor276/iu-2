@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -39,45 +38,16 @@ func GenerateIcon(resourcePath string, icon string) error {
 		return err
 	}
 
-	if err := createIcon(img, iconFilename, 512, 512, 2); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 512, 512, 1); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 256, 256, 2); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 256, 256, 1); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 128, 128, 2); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 128, 128, 1); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 32, 32, 2); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 32, 32, 1); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 16, 16, 2); err != nil {
-		return err
-	}
-
-	if err := createIcon(img, iconFilename, 16, 16, 1); err != nil {
-		return err
-	}
+	createIcon(img, iconFilename, 512, 512, 2)
+	createIcon(img, iconFilename, 512, 512, 1)
+	createIcon(img, iconFilename, 256, 256, 2)
+	createIcon(img, iconFilename, 256, 256, 1)
+	createIcon(img, iconFilename, 128, 128, 2)
+	createIcon(img, iconFilename, 128, 128, 1)
+	createIcon(img, iconFilename, 32, 32, 2)
+	createIcon(img, iconFilename, 32, 32, 1)
+	createIcon(img, iconFilename, 16, 16, 2)
+	createIcon(img, iconFilename, 16, 16, 1)
 
 	if err := RunCmd("iconutil", "-c", "icns", iconFilename); err != nil {
 		return nil
@@ -88,7 +58,7 @@ func GenerateIcon(resourcePath string, icon string) error {
 
 func createIcon(img image.Image, filename string, width uint, height uint, mult uint) error {
 	if mult == 0 {
-		return errors.New("mult can't be 0")
+		mult = 1
 	}
 
 	resized := resize.Resize(width*mult, height*mult, img, resize.Lanczos3)
@@ -101,7 +71,7 @@ func createIcon(img image.Image, filename string, width uint, height uint, mult 
 
 	f, err := os.Create(filename)
 	if err != nil {
-		return err
+		iulog.Panic(err)
 	}
 	defer f.Close()
 
