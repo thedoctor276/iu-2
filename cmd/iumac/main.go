@@ -102,7 +102,10 @@ func MakeApp() (err error) {
 		return err
 	}
 
-	return GenerateIcon(resourcesPath, conf.Mac.Icon)
+	if len(conf.Mac.Icon) != 0 {
+		return GenerateIcon(resourcesPath, conf.Mac.Icon)
+	}
+	return nil
 }
 
 func MakeResources(contentsPath string, resourcesSrc string) (err error) {
