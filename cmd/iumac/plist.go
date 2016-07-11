@@ -68,6 +68,20 @@ var (
     </dict>
 	{{if .SandboxMode}}<key>com.apple.security.app-sandbox</key>
     <true/>{{end}}
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+        	<string>Supported files</string>
+			<key>CFBundleTypeRole</key>
+			<string>{{.AppRole}}</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				{{range .UTI}}<string>{{.}}</string>
+				{{end}}
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
 `
@@ -96,6 +110,8 @@ type Plist struct {
 	CFBundleIconFile              string
 	LSUIElement                   string
 	SandboxMode                   bool
+	AppRole                       string
+	UTI                           []string
 }
 
 func (plist Plist) Save(contentsPath string) error {
@@ -139,5 +155,7 @@ func MakePlist(contentsPath string, conf config.App) Plist {
 		CFBundleIconFile:              iconId(conf.Mac.Icon),
 		LSUIElement:                   "true",
 		SandboxMode:                   conf.Mac.SandboxMode,
+		AppRole:                       conf.Mac.AppRole,
+		UTI:                           conf.Mac.UTI,
 	}
 }

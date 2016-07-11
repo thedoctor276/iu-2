@@ -24,6 +24,8 @@ type Mac struct {
 	DeploymentTarget  string
 	Icon              string
 	SandboxMode       bool
+	AppRole           string
+	UTI               []string
 }
 
 // Exists informs about if the config file exists or not.
